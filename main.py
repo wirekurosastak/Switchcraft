@@ -152,7 +152,7 @@ class OptimizerApp:
         for col_frame in self.column_frames:
             col_frame.config(width=col_width)
 
-    # --- NEW: Height-balanced column layout ---
+    # --- REFINED: Height-balanced column layout ---
     def repopulate_columns_balanced(self):
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
@@ -244,11 +244,6 @@ class OptimizerApp:
 
     def execute_powershell_command(self, command, function_name):
         if not command.strip():
-            return
-        blocked_keywords = ["Remove-Item", "Format-Volume", "Clear-RecycleBin", "Stop-Computer", "Restart-Computer"]
-        if any(keyword in command for keyword in blocked_keywords):
-            messagebox.showerror("Security Error", f"Command for '{function_name}' contains blocked operations.")
-            logging.warning(f"Blocked command execution for '{function_name}': {command}")
             return
         try:
             subprocess.run(["powershell.exe", "-ExecutionPolicy", "Restricted", "-NoProfile", "-Command", command],
