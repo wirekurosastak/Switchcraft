@@ -1,0 +1,27 @@
+Koncepció: Python alkalmazás ami json-ból dinamikusan kezeli az adatokat.
+Cél: Windows 11 Optimalizáló alkalmazás, mely elsősorban registry beállításokat kezel.
+
+Főprogram:
+main.py
+
+-GitHubról olvassa a funkciókat https://github.com/wirekuro/Switchcraft/blob/main/functions.json
+    -Ehhez internetkapcsolat szükséges első futtatáskor
+    -Elmenti a functions.json-t a számítógépre (mondjuk C:\SwitchCraft\) - Itt tárolja a felhasználó beállításait, a többi futtatáskor már nem fontos az internetkapcsolat.
+    -Ha van internetkapcsolata a felhasználónak (erre nem szükséges külön check) akkor mindig olvassa ki githubról a jsont (mivel az változhatott),
+     bővítse a gépre mentettet, de ne írja felül a json "enabled" paraméterét egyes funkcióknál, mivel az usernek újra be kellene állítania."
+
+-Vizuálist felülettel rendelkezik
+    -Fix 4 oszlopos elrendezés (Az egyes kategóriákat ne törje el a következő oszlopba, de legyen viszonylag arányos az oszlopok hossza.)
+    -Reszponzív (Különböző képernyőfelbontásokhoz dinamikusan kezeli a betűméretet, kapcsolók méretét.)
+    -Annyi Switch legyen benne amennyi funkció (dinamikusan a json alapján)
+        -Minden Switch bekapcsoláskor a functions.json "on" parancsát futtatja le powershellben, visszakapcsoláskor az "off" parancsot (ezek windows default értékek).
+    -Görgethető egérgörgővel (scrollbar is lehet pluszba, ha nem töri meg az elrendezést)
+
+-Nyelvek olvasása languages.json-ból a functions.json kiolvasása alapján (johet a local file, ha van internet ezt is frissíti)
+    -Ha megoldható automatikusan azt a nyelvet használja ami a felhasználó windows nyelvbeállítása
+        -Ha nincs fordítás az adott nyelvhez marad az angol. Ez nincs a languages.json-ban mert ez az alapértelmezett
+    -Manuálisan is lehessen nyelvet választani (pl legördülő menü)
+
+
+    Ha valami nem egyértelmű:
+    https://chatgpt.com/share/68d2a0b7-4c3c-8006-9cdc-df374a6b8ae4
