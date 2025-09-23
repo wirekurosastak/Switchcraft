@@ -25,3 +25,85 @@ main.py
 
     Ha valami nem egyértelmű:
     https://chatgpt.com/share/68d2a0b7-4c3c-8006-9cdc-df374a6b8ae4
+
+
+
+    functions.json szintaxis:
+   [
+    {
+        "category": "Touch",
+        "category_id": 5,
+        "items": [
+            {
+                "name": "Disable Windows Ink",
+                "purpose": "Turns off the Windows Ink Workspace.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'Enabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'PenWorkspaceAppSuggestionsEnabled' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'Enabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'PenWorkspaceAppSuggestionsEnabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Spell Checking",
+                "purpose": "Disables the automatic spell checker in Windows.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'DisableAutomaticSpellChecking' -Value 1 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'DisableAutomaticSpellChecking' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Windows Update",
+        "category_id": 6,
+        "items": [
+            {
+                "name": "Disable Automatic Updates",
+                "purpose": "Stops Windows from automatically downloading and installing updates.",
+                "on": "Set-Service -Name wuauserv -StartupType Disabled; Stop-Service -Name wuauserv -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU' -Name 'NoAutoUpdate' -Value 1 -Type DWORD -Force",
+                "off": "Set-Service -Name wuauserv -StartupType Automatic; Start-Service -Name wuauserv; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU' -Name 'NoAutoUpdate' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Microsoft Store Updates",
+                "purpose": "Prevents apps from the Microsoft Store from updating automatically.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\WindowsStore' -Name 'AutoDownload' -Value 2 -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SilentInstalledAppsEnabled' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\WindowsStore' -Name 'AutoDownload' -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SilentInstalledAppsEnabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            }
+        ]
+    }
+]
+
+
+
+
+languages.json szintaxis:
+   [
+    {
+        "language": "Magyar",
+        "category": "Érintés",
+        "category_id": 5,
+        "items": [
+            {
+                "name": "Windows ink letiltása",
+                "purpose": "Kikapcsolja a Windows Ink munkaterületet.",
+            },
+            {
+                "name": "Helyesírás-ellenőrzés letiltása",
+                "purpose": "Letiltja az automatikus helyesírás-ellenőrzőt a Windows rendszerben.",
+            }
+        ]
+    },
+    {
+        "category": "Windows Update",
+        "category_id": 6,
+        "items": [
+            {
+                "name": "Automatikus frissítések letiltása",
+                "purpose": "Leállítja a Windows frissítések automatikus letöltését és telepítését.",
+            },
+            {
+                "name": "Microsoft Store frissítések letiltása",
+                "purpose": "Megakadályozza a Microsoft Store-ból származó alkalmazások automatikus frissítését.",
+            }
+        ]
+    }
+]
