@@ -206,7 +206,7 @@ class OptimizerApp:
         logging.info("Application started")
 
     def load_functions(self):
-        url = "https://raw.githubusercontent.com/wirekuro/wintooljson-fetch/main/functions.json"
+        url = "https://raw.githubusercontent.com/wirekuro/Switchcraft/main/functions.json"
         try:
             with urllib.request.urlopen(url) as response:
                 data = json.loads(response.read().decode("utf-8"))

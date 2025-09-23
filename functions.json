@@ -1,0 +1,481 @@
+[
+    {
+        "category": "System",
+        "items": [
+            {
+                "name": "Optimize Performance",
+                "purpose": "Applies various registry tweaks to improve system responsiveness.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management' -Name 'DisablePagingExecutive' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl' -Name 'Win32PrioritySeparation' -Value 38 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'NetworkThrottlingIndex' -Value 4294967295 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management' -Name 'DisablePagingExecutive' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl' -Name 'Win32PrioritySeparation' -Value 2 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'NetworkThrottlingIndex' -Value 10 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Compatibility Assistant",
+                "purpose": "Disables the program compatibility assistant that warns about older programs.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat' -Name 'DisablePca' -Value 1 -Type DWord -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat' -Name 'DisablePca' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Print Service",
+                "purpose": "Disables the spooler service if you don't use a printer.",
+                "on": "Set-Service -Name Spooler -StartupType Disabled; Stop-Service -Name Spooler -Force",
+                "off": "Set-Service -Name Spooler -StartupType Automatic; Start-Service -Name Spooler",
+                "enabled": false
+            },
+            {
+                "name": "Disable Fax Service",
+                "purpose": "Disables the built-in Windows fax service.",
+                "on": "Set-Service -Name Fax -StartupType Disabled; Stop-Service -Name Fax -Force",
+                "off": "Set-Service -Name Fax -StartupType Automatic; Start-Service -Name Fax",
+                "enabled": false
+            },
+            {
+                "name": "Disable Sticky Keys",
+                "purpose": "Disables the accessibility feature for keyboard shortcuts.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Control Panel\\Accessibility\\StickyKeys' -Name 'Flags' -Value 506 -Type DWord -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Control Panel\\Accessibility\\StickyKeys' -Name 'Flags' -Value 510 -Type DWord -Force",
+                "enabled": false
+            },
+            {
+                "name": "Ultimate Performance",
+                "purpose": "Enables the 'Ultimate Performance' power plan for maximum speed.",
+                "on": "powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f147491020; $ultimateGuid = (powercfg /list | Select-String 'Ultimate Performance').ToString().Split(' ')[-1]; powercfg /setactive $ultimateGuid",
+                "off": "powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e",
+                "enabled": false
+            },
+            {
+                "name": "Max Core Boot",
+                "purpose": "Configures Windows to use the maximum number of CPU cores during boot.",
+                "on": "bcdedit /set {current} numproc %NUMBER_OF_PROCESSORS%",
+                "off": "bcdedit /deletevalue {current} numproc",
+                "enabled": false
+            },
+            {
+                "name": "Long Paths",
+                "purpose": "Allows Windows to use file paths longer than 260 characters.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' -Name 'LongPathsEnabled' -Value 1 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' -Name 'LongPathsEnabled' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Windows/Office Activation (legally problematic)",
+                "purpose": "This is for internal or testing use only and can have legal implications.",
+                "on": "",
+                "off": "",
+                "enabled": false
+            },
+            {
+                "name": "Disable Sensor Services",
+                "purpose": "Turns off services for things like brightness sensors, location, etc.",
+                "on": "Set-Service -Name 'SensrSvc' -StartupType Disabled; Stop-Service -Name 'SensrSvc' -Force",
+                "off": "Set-Service -Name 'SensrSvc' -StartupType Automatic; Start-Service -Name 'SensrSvc'",
+                "enabled": false
+            },
+            {
+                "name": "Disable Modern Standby",
+                "purpose": "Forces the system to use traditional sleep mode instead of Modern Standby.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Force",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Security",
+        "items": [
+            {
+                "name": "Disable Windows Defender",
+                "purpose": "Turns off the built-in antivirus and anti-malware protection.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender' -Name 'DisableAntiSpyware' -Value 1 -Type DWORD -Force; Set-MpPreference -DisableRealtimeMonitoring $true",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender' -Name 'DisableAntiSpyware' -Force; Set-MpPreference -DisableRealtimeMonitoring $false",
+                "enabled": false
+            },
+            {
+                "name": "Disable User Account Control (UAC)",
+                "purpose": "Turns off the security feature that prompts for permission when programs make changes.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Remote Desktop",
+                "purpose": "Prevents remote connections to your computer.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server' -Name 'fDenyTSConnections' -Value 1 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server' -Name 'fDenyTSConnections' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable SmartScreen",
+                "purpose": "Disables the Windows security feature that blocks unrecognized apps.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System' -Name 'EnableSmartScreen' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System' -Name 'EnableSmartScreen' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable TPM Check",
+                "purpose": "Disables the check for the Trusted Platform Module during setup or upgrades.",
+                "on": "",
+                "off": "",
+                "enabled": false
+            },
+            {
+                "name": "Disable Virtualization Based Security",
+                "purpose": "Disables security features like HVCI and Memory Integrity.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard' -Name 'EnableVirtualizationBasedSecurity' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard' -Name 'RequirePlatformSecurityFeatures' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard' -Name 'EnableVirtualizationBasedSecurity' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard' -Name 'RequirePlatformSecurityFeatures' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Disk Drives",
+        "items": [
+            {
+                "name": "Disable Superfetch",
+                "purpose": "Disables the service that preloads frequently used applications into RAM.",
+                "on": "Set-Service -Name SysMain -StartupType Disabled; Stop-Service -Name SysMain -Force",
+                "off": "Set-Service -Name SysMain -StartupType Automatic; Start-Service -Name SysMain",
+                "enabled": false
+            },
+            {
+                "name": "Disable Hibernation",
+                "purpose": "Turns off the hibernation feature and deletes the hiberfil.sys file.",
+                "on": "powercfg.exe /hibernate off",
+                "off": "powercfg.exe /hibernate on",
+                "enabled": false
+            },
+            {
+                "name": "Disable NTFS Timestamp",
+                "purpose": "Stops updating the last-access timestamp on files and folders.",
+                "on": "fsutil behavior set disablelastaccess 1",
+                "off": "fsutil behavior set disablelastaccess 0",
+                "enabled": false
+            },
+            {
+                "name": "Disable Search Indexing",
+                "purpose": "Disables the service that indexes files to speed up search.",
+                "on": "Set-Service -Name WSearch -StartupType Disabled; Stop-Service -Name WSearch -Force",
+                "off": "Set-Service -Name WSearch -StartupType Automatic; Start-Service -Name WSearch",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Privacy",
+        "items": [
+            {
+                "name": "Disable Telemetry Services",
+                "purpose": "Disables data collection services.",
+                "on": "Set-Service -Name DiagTrack -StartupType Disabled; Stop-Service -Name DiagTrack -Force; Set-Service -Name dmwappushservice -StartupType Disabled; Stop-Service -Name dmwappushservice -Force",
+                "off": "Set-Service -Name DiagTrack -StartupType Automatic; Start-Service -Name DiagTrack; Set-Service -Name dmwappushservice -StartupType Automatic; Start-Service -Name dmwappushservice",
+                "enabled": false
+            },
+            {
+                "name": "Disable Telemetry Tasks",
+                "purpose": "Removes scheduled tasks for telemetry collection.",
+                "on": "Get-ScheduledTask -TaskName 'Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser' | Disable-ScheduledTask; Get-ScheduledTask -TaskName 'Microsoft\\Windows\\Application Experience\\ProgramDataUpdater' | Disable-ScheduledTask; Get-ScheduledTask -TaskName 'Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator' | Disable-ScheduledTask",
+                "off": "Get-ScheduledTask -TaskName 'Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser' | Enable-ScheduledTask; Get-ScheduledTask -TaskName 'Microsoft\\Windows\\Application Experience\\ProgramDataUpdater' | Enable-ScheduledTask; Get-ScheduledTask -TaskName 'Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator' | Enable-ScheduledTask",
+                "enabled": false
+            },
+            {
+                "name": "Disable Office Telemetry",
+                "purpose": "Disables data collection in Microsoft Office applications.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Policies\\Microsoft\\office\\16.0\\osm' -Name 'Enablelogging' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Policies\\Microsoft\\office\\16.0\\osm' -Name 'EnableUpload' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKCU:\\Software\\Policies\\Microsoft\\office\\16.0\\osm' -Name 'Enablelogging' -Force; Remove-ItemProperty -Path 'HKCU:\\Software\\Policies\\Microsoft\\office\\16.0\\osm' -Name 'EnableUpload' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable NVIDIA Telemetry",
+                "purpose": "Disables data collection in NVIDIA graphics drivers.",
+                "on": "Set-Service -Name NvTelemetryContainer -StartupType Disabled; Stop-Service -Name NvTelemetryContainer -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\NVIDIA Corporation\\NvControlPanel2\\Client' -Name 'OptInOrOutPreference' -Value 0 -Type DWORD -Force",
+                "off": "Set-Service -Name NvTelemetryContainer -StartupType Automatic; Start-Service -Name NvTelemetryContainer; Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\NVIDIA Corporation\\NvControlPanel2\\Client' -Name 'OptInOrOutPreference' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Visual Studio Telemetry",
+                "purpose": "Disables data collection in Visual Studio.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\VisualStudio\\Telemetry' -Name 'TurnOffSwitch' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\VSCommon\\16.0_Config\\Telemetry' -Name 'OptIn' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\VisualStudio\\Telemetry' -Name 'TurnOffSwitch' -Force; Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\VSCommon\\16.0_Config\\Telemetry' -Name 'OptIn' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Edge Telemetry",
+                "purpose": "Disables data collection in the Microsoft Edge browser.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge' -Name 'MetricsReportingEnabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge' -Name 'BrowserSignin' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge' -Name 'MetricsReportingEnabled' -Force; Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge' -Name 'BrowserSignin' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Mozilla Firefox Telemetry",
+                "purpose": "Disables data collection in the Firefox browser.",
+                "on": "if (Test-Path \"$env:APPDATA\\Mozilla\\Firefox\\Profiles\\*\") { Set-Content -Path \"$env:APPDATA\\Mozilla\\Firefox\\Profiles\\*\\prefs.js\" -Value 'user_pref(\"datareporting.healthreport.uploadEnabled\", false); user_pref(\"toolkit.telemetry.enabled\", false);' -Force }",
+                "off": "",
+                "enabled": false
+            },
+            {
+                "name": "Disable Google Chrome Telemetry",
+                "purpose": "Disables data collection in the Chrome browser.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Google\\Chrome' -Name 'MetricsReportingEnabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Google\\Chrome' -Name 'DefaultBrowserSettingEnabled' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Google\\Chrome' -Name 'MetricsReportingEnabled' -Force; Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Google\\Chrome' -Name 'DefaultBrowserSettingEnabled' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Media Player Sharing",
+                "purpose": "Stops Windows Media Player from sharing media over the network.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\MediaPlayer\\Preferences' -Name 'SharingEnabled' -Value 0 -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\MediaPlayer\\Preferences' -Name 'SharingEnabled' -Value 1 -Force",
+                "enabled": false
+            },
+            {
+                "name": "Enhance Privacy",
+                "purpose": "Applies a range of settings to improve privacy.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection' -Name 'AllowTelemetry' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection' -Name 'AllowTelemetry' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo' -Name 'Enabled' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection' -Name 'AllowTelemetry' -Value 3 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection' -Name 'AllowTelemetry' -Value 3 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo' -Name 'Enabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Start Menu Ads",
+                "purpose": "Disables promotional content in the Start Menu.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SubscribedContent-338387Enabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SubscribedContent-353694Enabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SubscribedContent-353696Enabled' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SubscribedContent-338387Enabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SubscribedContent-353694Enabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SubscribedContent-353696Enabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Edge Discover",
+                "purpose": "Disables the 'Discover' feature in the Edge browser.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Edge\\Discover' -Name 'DiscoverEnabled' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Edge\\Discover' -Name 'DiscoverEnabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Error Reporting",
+                "purpose": "Stops Windows from sending error reports to Microsoft.",
+                "on": "Set-Service -Name WerSvc -StartupType Disabled; Stop-Service -Name WerSvc -Force",
+                "off": "Set-Service -Name WerSvc -StartupType Automatic; Start-Service -Name WerSvc",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Explorer & UI",
+        "items": [
+            {
+                "name": "Restore Classic File Explorer",
+                "purpose": "Brings back the old File Explorer ribbon from Windows 10.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Classes\\CLSID\\{d939634f-01a7-4b68-b3d1-44755a5f7823}\\InProcServer32' -Name '(Default)' -Value '' -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Classes\\CLSID\\{d939634f-01a7-4b68-b3d1-44755a5f7823}\\InProcServer32' -Name '(Default)' -Value 'shell32.dll' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Hide Taskbar Weather",
+                "purpose": "Removes the weather icon from the taskbar.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 2 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Hide Taskbar Search",
+                "purpose": "Hides the search icon and search box from the taskbar.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 1 -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Remove Cast to Device",
+                "purpose": "Removes the 'Cast to Device' option from the context menu.",
+                "on": "Remove-Item -Path 'HKCR:\\*\\shellex\\ContextMenuHandlers\\MiracastReceiver' -Force -ErrorAction SilentlyContinue",
+                "off": "",
+                "enabled": false
+            },
+            {
+                "name": "Align Taskbar to Left",
+                "purpose": "Moves the taskbar icons to the left side of the screen.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarAl' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarAl' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Snap Assist",
+                "purpose": "Disables the feature that helps you arrange app windows on the screen.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Enable Classic Right-Click Menu",
+                "purpose": "Restores the full-featured right-click context menu.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32' -Name '(Default)' -Value '' -Force",
+                "off": "Remove-Item -Path 'HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}' -Recurse -Force",
+                "enabled": false
+            },
+            {
+                "name": "Enable Compact Mode in Explorer",
+                "purpose": "Reduces spacing between items in File Explorer.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'UseCompactMode' -Value 1 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'UseCompactMode' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Widgets",
+                "purpose": "Removes the Widgets button from the taskbar.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWidgets' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWidgets' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Chat",
+                "purpose": "Removes the Chat icon (Microsoft Teams) from the taskbar.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarChat' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarChat' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Stickers",
+                "purpose": "Disables the ability to use stickers on the desktop.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Stickers' -Name 'Enabled' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Stickers' -Name 'Enabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable CoPilot AI",
+                "purpose": "Disables the CoPilot AI assistant.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarCopilot' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot' -Name 'TurnOffWindowsCopilot' -Value 1 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarCopilot' -Force; Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot' -Name 'TurnOffWindowsCopilot' -Force",
+                "enabled": false
+            },
+            {
+                "name": "Show all notification icons",
+                "purpose": "Displays all icons in the taskbar notification area.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer' -Name 'NotificationAreaDisplay' -Value 1 -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer' -Name 'NotificationAreaDisplay' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Remove menus delay",
+                "purpose": "Reduces the delay for pop-up menus to appear.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Control Panel\\Desktop' -Name 'MenuShowDelay' -Value 0 -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Control Panel\\Desktop' -Name 'MenuShowDelay' -Value 400 -Force",
+                "enabled": false
+            },
+            {
+                "name": "Restore Classic Photo Viewer",
+                "purpose": "Changes the default photo viewer to the old Windows Photo Viewer.",
+                "on": "New-Item -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows Photo Viewer\\Capabilities\\FileAssociations' -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows Photo Viewer\\Capabilities\\FileAssociations' -Name '.jpeg' -Value 'PhotoViewer.FileAssoc.Jpeg' -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows Photo Viewer\\Capabilities\\FileAssociations' -Name '.jpg' -Value 'PhotoViewer.FileAssoc.Jpeg' -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows Photo Viewer\\Capabilities\\FileAssociations' -Name '.png' -Value 'PhotoViewer.FileAssoc.Png' -Force",
+                "off": "Remove-Item -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows Photo Viewer\\Capabilities\\FileAssociations' -Force -ErrorAction SilentlyContinue",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Network",
+        "items": [
+            {
+                "name": "Optimize Network",
+                "purpose": "Adjusts network settings for better throughput and lower latency.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'NetworkThrottlingIndex' -Value 4294967295 -Type DWORD -Force; Set-NetTCPSetting -SettingName InternetCustom -CongestionProvider BBR2",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'NetworkThrottlingIndex' -Value 10 -Type DWORD -Force; Set-NetTCPSetting -SettingName InternetCustom -CongestionProvider Default",
+                "enabled": false
+            },
+            {
+                "name": "Disable SMBv1 Protocol",
+                "purpose": "Disables the older, less secure SMBv1 protocol. This protocol is not enabled by default in Windows 11.",
+                "on": "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart",
+                "off": "Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart",
+                "enabled": false
+            },
+            {
+                "name": "Disable SMBv2 Protocol",
+                "purpose": "Disables the SMBv2 protocol for network file sharing.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters' -Name 'SMB2' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters' -Name 'SMB2' -Force",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Gaming",
+        "items": [
+            {
+                "name": "Enable Gaming Mode",
+                "purpose": "Prioritizes system resources for gaming applications.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore' -Name 'GameDVR_Enabled' -Value 1 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore' -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Xbox Live",
+                "purpose": "Turns off background Xbox Live services.",
+                "on": "Set-Service -Name XblAuthManager -StartupType Disabled; Stop-Service -Name XblAuthManager -Force; Set-Service -Name XblGameSave -StartupType Disabled; Stop-Service -Name XblGameSave -Force",
+                "off": "Set-Service -Name XblAuthManager -StartupType Automatic; Start-Service -Name XblAuthManager; Set-Service -Name XblGameSave -StartupType Automatic; Start-Service -Name XblGameSave",
+                "enabled": false
+            },
+            {
+                "name": "Disable Game Bar",
+                "purpose": "Disables the Windows Game Bar overlay.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'Enabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AllowAutoGameMode' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'Enabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AllowAutoGameMode' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Touch",
+        "items": [
+            {
+                "name": "Disable Windows Ink",
+                "purpose": "Turns off the Windows Ink Workspace.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'Enabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'PenWorkspaceAppSuggestionsEnabled' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'Enabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PenWorkspace' -Name 'PenWorkspaceAppSuggestionsEnabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Spell Checking",
+                "purpose": "Disables the automatic spell checker in Windows.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'DisableAutomaticSpellChecking' -Value 1 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'DisableAutomaticSpellChecking' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Cloud Clipboard",
+                "purpose": "Disables the clipboard synchronization across devices.",
+                "on": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Clipboard' -Name 'CloudClipboardEnabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Clipboard' -Name 'EnableClipboardHistory' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Clipboard' -Name 'CloudClipboardEnabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Clipboard' -Name 'EnableClipboardHistory' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            }
+        ]
+    },
+    {
+        "category": "Windows Update",
+        "items": [
+            {
+                "name": "Disable Automatic Updates",
+                "purpose": "Stops Windows from automatically downloading and installing updates.",
+                "on": "Set-Service -Name wuauserv -StartupType Disabled; Stop-Service -Name wuauserv -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU' -Name 'NoAutoUpdate' -Value 1 -Type DWORD -Force",
+                "off": "Set-Service -Name wuauserv -StartupType Automatic; Start-Service -Name wuauserv; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU' -Name 'NoAutoUpdate' -Value 0 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Microsoft Store Updates",
+                "purpose": "Prevents apps from the Microsoft Store from updating automatically.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\WindowsStore' -Name 'AutoDownload' -Value 2 -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SilentInstalledAppsEnabled' -Value 0 -Type DWORD -Force",
+                "off": "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\WindowsStore' -Name 'AutoDownload' -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager' -Name 'SilentInstalledAppsEnabled' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            },
+            {
+                "name": "Disable Insider Service",
+                "purpose": "Disables the Windows Insider Program service.",
+                "on": "Set-Service -Name 'WaaSMedicSvc' -StartupType Disabled; Stop-Service -Name 'WaaSMedicSvc' -Force",
+                "off": "Set-Service -Name 'WaaSMedicSvc' -StartupType Automatic; Start-Service -Name 'WaaSMedicSvc'",
+                "enabled": false
+            },
+            {
+                "name": "Exclude Drivers from Updates",
+                "purpose": "Prevents Windows Update from automatically installing new hardware drivers.",
+                "on": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate' -Name 'ExcludeWUDriversInQualityUpdate' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DriverSearching' -Name 'SearchOrderConfig' -Value 0 -Type DWORD -Force",
+                "off": "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate' -Name 'ExcludeWUDriversInQualityUpdate' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DriverSearching' -Name 'SearchOrderConfig' -Value 1 -Type DWORD -Force",
+                "enabled": false
+            }
+        ]
+    }
+]
