@@ -72,7 +72,7 @@ tweaks:
       true: Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Value 0 -Type DWORD -Force
       false: Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Force
       enabled: false
-  - category: Security, Privacy
+  - category: Security & Privacy
     items:
     - name: Disable SmartScreen
       purpose: Disables the Windows security feature that blocks unrecognized apps.
