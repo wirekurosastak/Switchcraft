@@ -105,16 +105,6 @@ tweaks:
       enabled: false
   - category: Privacy
     items:
-    - name: example tweak 1
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
-    - name: example tweak 2
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
   - category: Explorer & UI
     items:
     - name: Align Taskbar to Left
@@ -135,16 +125,6 @@ tweaks:
       enabled: false
   - category: Network
     items:
-    - name: example tweak 1
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
-    - name: example tweak 2
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
   - category: Gaming
     items:
     - name: Enable Gaming Mode
@@ -156,35 +136,10 @@ tweaks:
         -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
         -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force
       enabled: false
-    - name: example tweak
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
   - category: Touch
     items:
-    - name: example tweak 1
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
-    - name: example tweak 2
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
   - category: Windows Update
     items:
-    - name: example tweak 1
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
-    - name: example tweak 2
-      purpose: example description (purpose)
-      true: ''
-      false: ''
-      enabled: false
 - feature: Cleaner
   categories:
   - category: Junk Files
