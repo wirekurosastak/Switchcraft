@@ -117,8 +117,8 @@ tweaks:
       enabled: false
     - name: Hide Taskbar Search
       purpose: Hides the search icon and search box from the taskbar.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 1 -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 0 -Type DWORD -Force
+      true: Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Search' -Name 'SearchboxTaskbarMode' -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Search' -Name 'SearchboxTaskbarMode' -Value 2 -Type DWORD -Force
       enabled: false
     - name: Disable Snap Assist
       purpose: Disables the feature that helps you arrange app windows on the screen.
