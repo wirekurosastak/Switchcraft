@@ -130,7 +130,7 @@ tweaks:
     - name: Windows/Office Activation (legally problematic)
       purpose: Activate Windows and Office using massgrave.dev.                                                                                                                                                                                                        ⚠️ This action is irrevertible.
       true: irm https://get.activated.win | iex
-      false: ''
+      false:
       enabled: false
 - feature: Cleaner
   categories:
