@@ -1,280 +1,372 @@
-import tkinter as tk
-from tkinter import messagebox
-import json
-import sys
+import os
 import subprocess
-import ctypes
-import logging
-import jsonschema
-import urllib.request
+import webbrowser
+import yaml
+import requests
+import customtkinter as ctk
+from tkinter import messagebox
+from vcolorpicker import getColor, useLightTheme
+from collections import defaultdict
 
-# --- ToggleSwitch Widget ---
-class ToggleSwitch(tk.Canvas):
-    def __init__(self, parent, scale=1.0, on_color="turquoise", off_color="#555555", command=None, initial_state=False):
-        width = int(60 * scale)
-        height = int(28 * scale)
-        super().__init__(parent, width=width, height=height, highlightthickness=0, bg=parent["bg"])
-        self.width = width
-        self.height = height
-        self.on_color = on_color
-        self.off_color = off_color
-        self.command = command
-        self.state = initial_state
-        self.corner_radius = self.height // 2
-        self.knob_radius = self.corner_radius - 4
+# --- Constants ---
+WINSANE_FOLDER = r"C:\Winsane"
+TWEAKS_FILE = os.path.join(WINSANE_FOLDER, "data.yaml")
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/wirekurosastak/Switchcraft/main/data.yaml"
+ACCENT_COLOR = "#3B8ED0"
 
-        self.bg_rect = self.create_rounded_rect(2, 2, width-2, height-2, self.corner_radius, fill=self.off_color)
-        knob_x = (self.width - self.corner_radius) if self.state else self.corner_radius
-        self.knob = self.create_oval(knob_x - self.knob_radius, self.height//2 - self.knob_radius,
-                                     knob_x + self.knob_radius, self.height//2 + self.knob_radius,
-                                     fill="white", outline="")
-        self.update_color()
-        self.bind("<Button-1>", self.toggle)
+# --- Helpers ---
+def darker(hex_color, factor=0.8):
+    c = hex_color.lstrip("#")
+    r, g, b = [int(c[i:i+2],16) for i in (0,2,4)]
+    return "#%02x%02x%02x" % (int(r*factor), int(g*factor), int(b*factor))
 
-    def create_rounded_rect(self, x1, y1, x2, y2, r, **kwargs):
-        points = [x1+r, y1, x2-r, y1, x2, y1, x2, y1+r,
-                  x2, y2-r, x2, y2, x2-r, y2, x1+r, y2,
-                  x1, y2, x1, y2-r, x1, y1+r, x1, y1]
-        return self.create_polygon(points, smooth=True, **kwargs)
+def run_powershell_as_admin(command):
+    if not command.strip(): return
+    try:
+        subprocess.run([
+            "powershell","-Command",
+            f"Start-Process powershell -ArgumentList \"{command}\" -Verb RunAs -WindowStyle Hidden"
+        ], check=True)
+    except subprocess.CalledProcessError as e:
+        messagebox.showerror("Error", f"Command failed:\n{e}")
 
-    def toggle(self, event=None):
-        self.state = not self.state
-        self.animate_knob()
-        self.update_color()
-        if self.command:
-            self.command(self.state)
+# --- Config ---
+def ensure_winsane_folder():
+    os.makedirs(WINSANE_FOLDER, exist_ok=True)
+    legacy_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.yaml")
+    if os.path.exists(legacy_file):
+        try: os.remove(legacy_file)
+        except: pass
 
-    def update_color(self):
-        self.itemconfig(self.bg_rect, fill=self.on_color if self.state else self.off_color)
+def save_tweaks(data):
+    try:
+        with open(TWEAKS_FILE,"w",encoding="utf-8") as f:
+            yaml.safe_dump(data,f,allow_unicode=True,indent=2,sort_keys=False)
+    except Exception as e:
+        messagebox.showerror("Save Error", f"Error saving configuration:\n{e}")
 
-    def animate_knob(self):
-        target_x = (self.width - self.corner_radius) if self.state else self.corner_radius
-        current_coords = self.coords(self.knob)
-        current_x = (current_coords[0] + current_coords[2]) / 2
-        step = 3 if target_x > current_x else -3
+def load_local_config(path):
+    if os.path.exists(path):
+        try:
+            with open(path,"r",encoding="utf-8") as f:
+                return yaml.safe_load(f)
+        except Exception as e:
+            messagebox.showerror("File Error", f"Local load failed:\n{e}")
+    return None
 
-        def move():
-            nonlocal current_x
-            if abs(target_x - current_x) > 1:
-                current_x += step
-                self.move(self.knob, step, 0)
-                self.after(5, move)
+def fetch_remote_config(url,timeout=5):
+    try:
+        resp = requests.get(url, timeout=timeout)
+        resp.raise_for_status()
+        return yaml.safe_load(resp.text)
+    except Exception:
+        messagebox.showinfo("Network Error", "Failed to fetch config from GitHub.\nLocal configuration will be used if available.")
+        return None
+
+def merge_configs(remote, local):
+    if not remote: return local
+    theme_backup = local.get("theme",{}).copy() if local else {}
+    enabled_map = {(feat["feature"], cat["category"], item["name"]): item.get("enabled", False)
+                   for feat in (local or {}).get("tweaks", [])
+                   for cat in feat.get("categories", [])
+                   for item in cat.get("items", [])}
+    for feat in remote.get("tweaks", []):
+        for cat in feat.get("categories", []):
+            for item in cat.get("items", []):
+                key = (feat["feature"], cat["category"], item["name"])
+                item["enabled"] = enabled_map.get(key, item.get("enabled", False))
+    if theme_backup:
+        remote["theme"] = theme_backup
+    return remote
+
+# --- Initialize Config ---
+ensure_winsane_folder()
+local_data = load_local_config(TWEAKS_FILE)
+remote_data = fetch_remote_config(GITHUB_RAW_URL)
+if local_data:
+    global_tweak_data = merge_configs(remote_data, local_data) if remote_data else local_data
+else:
+    global_tweak_data = remote_data
+if global_tweak_data: save_tweaks(global_tweak_data)
+
+# --- GUI Components ---
+class TweakItemControl(ctk.CTkFrame):
+    def __init__(self, master, item, all_data, **kwargs):
+        super().__init__(master, **kwargs)
+        self.item = item
+        self.all_data = all_data
+        self.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(self, text=item['name'], font=ctk.CTkFont(weight="bold", size=14),
+                     text_color=("black","white")).grid(row=0,column=0,padx=15,pady=(5,0),sticky="w")
+        ctk.CTkLabel(self, text=item.get('purpose','No description.'), wraplength=450,
+                     justify="left", fg_color="transparent", text_color=("gray30","gray70")
+        ).grid(row=1,column=0,padx=15,pady=(0,5),sticky="w")
+
+        self.tweak_var = ctk.BooleanVar(value=item.get('enabled',False))
+        self.tweak_switch = ctk.CTkSwitch(self, text="", variable=self.tweak_var,
+                                          command=self.toggle_tweak, progress_color=ACCENT_COLOR)
+        self.tweak_switch.grid(row=0,column=1,rowspan=2,padx=20,pady=10,sticky="e")
+
+    def toggle_tweak(self):
+        is_on = self.tweak_var.get()
+        command = self.item.get(is_on,'')
+        run_powershell_as_admin(command)
+        self.item['enabled'] = is_on
+        save_tweaks(self.all_data)
+
+class SubTabView(ctk.CTkTabview):
+    def __init__(self, master, categories_data, root_data, feature_name, **kwargs):
+        super().__init__(master, **kwargs)
+        hover_col = darker(ACCENT_COLOR,0.85)
+        self.configure(
+            text_color=("black","white"),
+            segmented_button_selected_color=(ACCENT_COLOR,ACCENT_COLOR),
+            segmented_button_selected_hover_color=(hover_col,hover_col),
+            segmented_button_unselected_color=("#E5E5E5","#2B2B2B"),
+            segmented_button_unselected_hover_color=("#D5D5D5","#3B3B3B")
+        )
+        category_map = defaultdict(list)
+        for cat_entry in categories_data:
+            category_map[cat_entry['category']].extend(cat_entry.get('items',[]))
+        for category_name, items in category_map.items():
+            self.add(category_name)
+            # Fixed label width
+            label = ctk.CTkLabel(self.tab(category_name), 
+                                text="Please restart your computer after desired tweaks are set.",
+                                text_color=("black","white"))
+            label.pack(pady=(10,0))
+            
+            scroll_frame = ctk.CTkScrollableFrame(self.tab(category_name))
+            scroll_frame.pack(fill="both",expand=True,padx=10,pady=10)
+            for item in items:
+                TweakItemControl(scroll_frame,item=item,all_data=root_data,
+                                 fg_color=("white","gray15")).pack(fill="x",pady=5,padx=5)
+
+class MainTabView(ctk.CTkTabview):
+    def __init__(self, master, all_data, **kwargs):
+        super().__init__(master, **kwargs)
+        hover_col = darker(ACCENT_COLOR,0.85)
+        self.configure(
+            text_color=("black","white"),
+            segmented_button_selected_color=(ACCENT_COLOR,ACCENT_COLOR),
+            segmented_button_selected_hover_color=(hover_col,hover_col),
+            segmented_button_unselected_color=("#E5E5E5","#2B2B2B"),
+            segmented_button_unselected_hover_color=("#D5D5D5","#3B3B3B")
+        )
+        for main_tab in all_data.get('tweaks',[]):
+            tab_name = main_tab.get('feature')
+            if not tab_name: continue
+            self.add(tab_name)
+            categories = main_tab.get('categories',[])
+            if categories:
+                SubTabView(self.tab(tab_name),categories,all_data,tab_name).pack(fill="both",expand=True,padx=5,pady=5)
             else:
-                dx = target_x - current_x
-                self.move(self.knob, dx, 0)
-        move()
+                ctk.CTkLabel(self.tab(tab_name),text=f"'{tab_name}' content coming soon...",
+                             text_color=("black","white")).pack(pady=20,padx=20)
 
-    def get(self):
-        return self.state
+class PowerTimer(ctk.CTkToplevel):
+    def __init__(self,parent):
+        super().__init__(parent)
+        self.title("Power Scheduler")
+        self.geometry("335x150")
+        self.grab_set()
+        self.resizable(False,False)
+        
+        # Center on parent
+        self.update_idletasks()
+        x = parent.winfo_x() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_y() + (parent.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{x}+{y}")
 
-    def set(self, state: bool):
-        self.state = state
-        knob_x = (self.width - self.corner_radius) if state else self.corner_radius
-        self.coords(self.knob, knob_x - self.knob_radius, self.height//2 - self.knob_radius,
-                    knob_x + self.knob_radius, self.height//2 + self.knob_radius)
-        self.update_color()
+        self.input_hour = self._create_entry("Hours",10)
+        self.input_min = self._create_entry("Minutes",40)
+        self.input_sec = self._create_entry("Seconds",70)
 
+        hover_col = darker(ACCENT_COLOR,0.85)
+        for text, cmd, x in [("Shutdown",self.shutdown,10),
+                              ("Restart",self.restart,90),
+                              ("BIOS",self.bios,170),
+                              ("Cancel",self.destroy,250)]:
+            ctk.CTkButton(self,text=text,command=cmd,width=75,
+                          fg_color=ACCENT_COLOR, hover_color=hover_col).place(x=x,y=110)
 
-# --- Tooltip ---
-class ToolTip:
-    def __init__(self, widget, text):
-        self.widget = widget
-        self.text = text
-        self.tooltip_window = None
-        widget.bind("<Enter>", self.show_tooltip)
-        widget.bind("<Leave>", self.hide_tooltip)
+    def _create_entry(self,label,y):
+        ctk.CTkLabel(self,text=label).place(x=10,y=y)
+        entry = ctk.CTkEntry(self,width=255)
+        entry.insert(0,"0")
+        entry.place(x=70,y=y)
+        return entry
 
-    def show_tooltip(self, event=None):
-        if self.tooltip_window or not self.text:
-            return
-        x = self.widget.winfo_rootx() + 20
-        y = self.widget.winfo_rooty() + 20
-        self.tooltip_window = tw = tk.Toplevel(self.widget)
-        tw.wm_overrideredirect(True)
-        tw.wm_geometry(f"+{x}+{y}")
-        label = tk.Label(tw, text=self.text, justify="left",
-                         background="#333333", foreground="white",
-                         relief="solid", borderwidth=1, font=("Segoe UI", 9),
-                         padx=5, pady=3)
-        label.pack()
+    def get_total_seconds(self):
+        try:
+            return int(self.input_hour.get())*3600 + int(self.input_min.get())*60 + int(self.input_sec.get())
+        except ValueError:
+            messagebox.showerror("Error","Please enter valid numbers.")
+            return None
 
-    def hide_tooltip(self, event=None):
-        if self.tooltip_window:
-            self.tooltip_window.destroy()
-            self.tooltip_window = None
+    def shutdown(self): self._do("'-s','-f'")
+    def restart(self): self._do("'-r','-f'")
+    def bios(self): self._do("'-r','-fw'")
 
+    def _do(self,args):
+        total = self.get_total_seconds()
+        if total is not None:
+            run_powershell_as_admin(f"Start-Process shutdown -ArgumentList {args},'-t {total}'")
+            self.destroy()
+
+# --- Tooltip class ---
+class Tooltip(ctk.CTkToplevel):
+    def __init__(self,parent,text):
+        super().__init__(parent)
+        self.wm_overrideredirect(True)
+        self.attributes("-topmost",True)
+        self.configure(fg_color=("white","#333333"), corner_radius=12)
+        self.label = ctk.CTkLabel(self,text=text,text_color=("black","white"),
+                                   fg_color=("white","#333333"))
+        self.label.pack(padx=8,pady=4)
+        self.withdraw()
+    def show(self,x,y):
+        self.geometry(f"+{x}+{y}")
+        self.deiconify()
+    def hide(self):
+        self.withdraw()
+
+def add_tooltip(widget,text):
+    tip = Tooltip(widget,text)
+    def on_enter(event):
+        x = widget.winfo_rootx() + widget.winfo_width() + 5
+        y = widget.winfo_rooty()
+        tip.show(x,y)
+    def on_leave(event):
+        tip.hide()
+    widget.bind("<Enter>",on_enter)
+    widget.bind("<Leave>",on_leave)
 
 # --- Main App ---
-class OptimizerApp:
-    def __init__(self, root):
-        self.root = root
-        self.setup_logging()
-        self.switches = {}
+class Winsane(ctk.CTk):
+    def __init__(self, tweak_data):
+        super().__init__()
+        global ACCENT_COLOR
+        if not tweak_data or 'tweaks' not in tweak_data:
+            self.destroy(); return
 
-        root.state('zoomed')
-        root.configure(bg="#1a1f52")
-        root.title("Windows 11 Optimizer")
+        theme_data = tweak_data.get("theme", {})
+        if isinstance(theme_data, dict):
+            self.current_theme = theme_data.get("mode", "system")
+            ACCENT_COLOR = theme_data.get("accent_color", ACCENT_COLOR)
+        else:
+            self.current_theme = theme_data if theme_data in ["dark", "light", "system"] else "system"
 
-        # Dynamic scaling
-        self.scale_factor = root.winfo_screenwidth() / 1920
-        self.font_large = ("Segoe UI Semibold", int(16 * self.scale_factor))
-        self.font_medium = ("Segoe UI Semibold", int(12 * self.scale_factor))
-        self.font_small = ("Segoe UI Semibold", int(10 * self.scale_factor))
+        ctk.set_appearance_mode(self.current_theme)
+        useLightTheme(ctk.get_appearance_mode() == "Light")
 
-        header = tk.Label(root, text="Windows 11 Optimizer", fg="white", bg="#1a1f52", font=self.font_large)
-        header.pack(pady=15)
+        self.root_data = tweak_data
+        self.title("Winsane")
+        
+        # Smooth startup
+        self.attributes('-alpha', 0.0)
+        self.update()
+        self.state("zoomed")
+        
+        self.grid_columnconfigure(0, weight=0, minsize=60)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        main_frame = tk.Frame(root, bg="#1a1f52")
-        main_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        # Sidebar
+        sidebar = ctk.CTkFrame(self, width=60, fg_color=("#EBEBEB","#242424"))
+        sidebar.grid(row=0, column=0, sticky="nsw")
+        sidebar.grid_propagate(False)
+        sidebar.grid_rowconfigure(0, weight=1)
+        sidebar.grid_rowconfigure(5, weight=1)
 
-        self.canvas = tk.Canvas(main_frame, bg="#1a1f52", highlightthickness=0, borderwidth=0)
-        self.canvas.pack(side="left", fill="both", expand=True)
+        btn_cfg = dict(width=40, height=40, font=ctk.CTkFont(size=14),
+                       text_color=("black","white"), corner_radius=8,
+                       fg_color=("#d0d0d0","#333333"), hover_color=("#c0c0c0","#444444"))
 
-        self.scrollable_frame = tk.Frame(self.canvas, bg="#1a1f52")
-        self.canvas_window = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        b_theme = ctk.CTkButton(sidebar, text="☼", command=self.toggle_theme, **btn_cfg)
+        b_color = ctk.CTkButton(sidebar, text="🎨", command=self.pick_color, **btn_cfg)
+        b_power = ctk.CTkButton(sidebar, text="⏻", command=lambda: PowerTimer(self), **btn_cfg)
+        b_github = ctk.CTkButton(sidebar, text="🐱", command=self.open_github, **btn_cfg)
 
-        # Mouse wheel scroll only
-        self.canvas.bind_all("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        buttons = [b_theme, b_color, b_power, b_github]
+        for i, btn in enumerate(buttons, start=1):
+            btn.grid(row=i, column=0, pady=5, padx=10)
 
-        self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
-        self.canvas.bind("<Configure>", lambda e: self.adjust_columns_width())
+        add_tooltip(b_theme, "Theme")
+        add_tooltip(b_color, "Accent Color")
+        add_tooltip(b_power, "Power Scheduler")
+        add_tooltip(b_github, "GitHub")
 
-        # Load functions
-        self.functions = self.load_functions()
-        self.column_frames = []
-        self.repopulate_columns_balanced()
+        MainTabView(self, tweak_data).grid(row=0, column=1, padx=(3, 60), pady=(10, 30), sticky="nsew")
+        
+        # Fade in
+        self.fade_in()
 
-    def adjust_columns_width(self):
-        canvas_width = self.canvas.winfo_width()
-        if canvas_width <= 0:
+    def fade_in(self):
+        for i in range(0, 11):
+            self.attributes('-alpha', i/10)
+            self.update()
+            self.after(20)
+
+    def toggle_theme(self):
+        # Fade out completely to transparent
+        for i in range(0, 11):
+            self.attributes('-alpha', 1.0 - (i/10))
+            self.update()
+            self.after(40)  # Longer delay for smoother transition
+        
+        # Change theme when fully transparent
+        self.current_theme = {"system":"dark","dark":"light","light":"system"}[self.current_theme]
+        ctk.set_appearance_mode(self.current_theme)
+        useLightTheme(ctk.get_appearance_mode() == "Light")
+        
+        # Ensure color picker theme is updated
+        useLightTheme(self.current_theme == "light")
+        
+        # Fade back in from transparent
+        for i in range(0, 11):
+            self.attributes('-alpha', i/10)
+            self.update()
+            self.after(40)  # Longer delay for smoother transition
+        
+        if "theme" not in self.root_data:
+            self.root_data["theme"] = {}
+        self.root_data["theme"]["mode"] = self.current_theme
+        save_tweaks(self.root_data)
+
+    def pick_color(self):
+        global ACCENT_COLOR
+        color = getColor()
+        if not color or color == (0,0,0):
             return
-        col_width = canvas_width // 4
-        for col_frame in self.column_frames:
-            col_frame.config(width=col_width)
+        # Ensure we got an RGB tuple of length 3
+        if isinstance(color, tuple) and len(color) == 3:
+            ACCENT_COLOR = "#%02x%02x%02x" % tuple(map(int, color))
+            if "theme" not in self.root_data or not isinstance(self.root_data.get("theme"), dict):
+                self.root_data["theme"] = {}
+            self.root_data["theme"]["accent_color"] = ACCENT_COLOR
+            save_tweaks(self.root_data)
+            self.refresh_accent()
 
-    # --- REFINED: Height-balanced column layout ---
-    def repopulate_columns_balanced(self):
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
-        self.column_frames = []
+    def refresh_accent(self):
+        hover_col = darker(ACCENT_COLOR, 0.85)
+        def update(widget):
+            if isinstance(widget, ctk.CTkSwitch):
+                widget.configure(progress_color=ACCENT_COLOR)
+            elif isinstance(widget, ctk.CTkTabview):
+                widget.configure(segmented_button_selected_color=(ACCENT_COLOR, ACCENT_COLOR),
+                                 segmented_button_selected_hover_color=(hover_col, hover_col))
+            elif isinstance(widget, ctk.CTkButton) and widget.cget("text") in ["Shutdown","Restart","BIOS"]:
+                widget.configure(fg_color=ACCENT_COLOR, hover_color=hover_col)
+            for w in widget.winfo_children():
+                update(w)
+        update(self)
 
-        if not self.functions:
-            return
+    def open_github(self): 
+        webbrowser.open_new_tab("https://github.com/wirekurosastak/Winsane")
 
-        num_cols = 4
-        columns_heights = [0] * num_cols
-        for i in range(num_cols):
-            col_frame = tk.Frame(self.scrollable_frame, bg="#1a1f52")
-            col_frame.grid(row=0, column=i, sticky="nsew", padx=10)
-            self.column_frames.append(col_frame)
-
-        for category_data in self.functions:
-            min_index = columns_heights.index(min(columns_heights))
-            self.add_category_to_frame(category_data, self.column_frames[min_index])
-            # Approximate height by number of items + 1 for header
-            columns_heights[min_index] += len(category_data['items']) + 1
-
-        self.adjust_columns_width()
-
-    def add_category_to_frame(self, category_data, parent_frame):
-        category_label = tk.Label(parent_frame, text=f"─── {category_data['category']} ───",
-                                  fg="white", bg="#1a1f52", font=self.font_medium)
-        category_label.pack(pady=(15,5), anchor="w")
-
-        wrap_length = int(self.root.winfo_screenwidth()/4 - 60)
-
-        for func in category_data['items']:
-            frame = tk.Frame(parent_frame, bg="#1a1f52")
-            frame.pack(anchor="w", pady=8, fill="x")
-
-            label = tk.Label(frame, text=func['name'], fg="white", bg="#1a1f52",
-                             font=self.font_small, wraplength=wrap_length, justify="left")
-            label.pack(side="left", padx=10, fill="x", expand=True)
-            ToolTip(label, func['purpose'])
-
-            toggle = ToggleSwitch(frame, scale=self.scale_factor,
-                                  on_color="turquoise", off_color="#555555",
-                                  command=lambda state, name=func['name']: self.save_state(name, state),
-                                  initial_state=func.get("enabled", False))
-            toggle.pack(side="right", padx=10)
-            self.switches[func["name"]] = toggle
-
-    def setup_logging(self):
-        logging.basicConfig(filename='windows_optimizer.log',
-                            level=logging.INFO,
-                            format='%(asctime)s - %(levelname)s - %(message)s')
-        logging.info("Application started")
-
-    def load_functions(self):
-        url = "https://raw.githubusercontent.com/wirekuro/Switchcraft/main/functions.json"
-        try:
-            with urllib.request.urlopen(url) as response:
-                data = json.loads(response.read().decode("utf-8"))
-
-            schema = {
-                "type":"array",
-                "items":{
-                    "type":"object",
-                    "properties":{
-                        "category":{"type":"string"},
-                        "items":{
-                            "type":"array",
-                            "items":{
-                                "type":"object",
-                                "properties":{
-                                    "name":{"type":"string"},
-                                    "purpose":{"type":"string"},
-                                    "on":{"type":"string"},
-                                    "off":{"type":"string"},
-                                    "enabled":{"type":"boolean"}
-                                },
-                                "required":["name","purpose","on","off","enabled"]
-                            }
-                        }
-                    },
-                    "required":["category","items"]
-                }
-            }
-            jsonschema.validate(instance=data, schema=schema)
-            return data
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to load JSON: {e}")
-            logging.error(f"Error loading JSON: {e}")
-            return []
-
-    def execute_powershell_command(self, command, function_name):
-        if not command.strip():
-            return
-        try:
-            subprocess.run(["powershell.exe", "-ExecutionPolicy", "Restricted", "-NoProfile", "-Command", command],
-                           check=True, capture_output=True, text=True, timeout=30)
-            logging.info(f"Executed command for {function_name}")
-        except Exception as e:
-            messagebox.showerror("Execution Error", f"Error executing command for '{function_name}': {e}")
-            logging.error(f"Execution error: {e}")
-
-    def save_state(self, function_name, new_state):
-        for category_data in self.functions:
-            for func in category_data['items']:
-                if func['name'] == function_name:
-                    func['enabled'] = new_state
-                    command_to_run = func.get('on' if new_state else 'off')
-                    if command_to_run:
-                        self.execute_powershell_command(command_to_run, function_name)
-                    return
-
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
-
-if __name__ == "__main__":
-    if not is_admin():
-        messagebox.showerror("Admin Privileges Required",
-                             "This application requires administrator privileges. Please right-click and 'Run as Administrator'.")
-        sys.exit()
-
-    root = tk.Tk()
-    app = OptimizerApp(root)
-    root.mainloop()
+# --- Start App ---
+if global_tweak_data:
+    app = Winsane(global_tweak_data)
+    app.mainloop()
