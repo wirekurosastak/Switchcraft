@@ -53,6 +53,11 @@ tweaks:
       false: Set-Service -Name WSearch -StartupType Automatic; Start-Service -Name
         WSearch
       enabled: false
+    - name: Disable Hibernation
+      purpose: Turns off the hibernation feature and deletes the hiberfil.sys file.,
+      true : powercfg.exe /hibernate off
+      false : powercfg.exe /hibernate on
+      enabled : false
   - category: Security
     items:
     - name: Disable UAC
