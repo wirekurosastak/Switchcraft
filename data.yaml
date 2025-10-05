@@ -33,11 +33,6 @@ tweaks:
 
         '
       enabled: false
-    - name: Windows/Office Activation (legally problematic)
-      purpose: Activate Windows and Office using massgrave.dev.
-      true: irm https://get.activated.win | iex
-      false: slmgr.vbs /upk
-      enabled: false
     - name: Disable Superfetch
       purpose: Disables the service that preloads frequently used applications into
         RAM.
@@ -45,53 +40,6 @@ tweaks:
         -Force
       false: Set-Service -Name SysMain -StartupType Automatic; Start-Service -Name
         SysMain
-      enabled: false
-    - name: Disable Search Indexing
-      purpose: Disables the service that indexes files to speed up search.
-      true: Set-Service -Name WSearch -StartupType Disabled; Stop-Service -Name WSearch
-        -Force
-      false: Set-Service -Name WSearch -StartupType Automatic; Start-Service -Name
-        WSearch
-      enabled: false
-    - name: Disable Hibernation
-      purpose: Turns off the hibernation feature and deletes the hiberfil.sys file.
-      true: powercfg.exe /hibernate off
-      false: powercfg.exe /hibernate on
-      enabled: false
-    - name: Disable NTFS Timestamp
-      purpose: Stops updating the last-access timestamp on files and folders.
-      true: fsutil behavior set disablelastaccess 1
-      false: fsutil behavior set disablelastaccess 0
-      enabled: false
-    - name: Disable SmartScreen
-      purpose: Disables the Windows security feature that blocks unrecognized apps.
-      true: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System' -Name 'EnableSmartScreen' -Value 0 -Type DWORD -Force
-      false: Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System' -Name 'EnableSmartScreen' -Force
-      enabled: false
-    - name: Disable Telemetry Services
-      purpose: Disables data collection services.
-      true: Set-Service -Name DiagTrack -StartupType Disabled; Stop-Service -Name DiagTrack -Force; Set-Service -Name dmwappushservice -StartupType Disabled; Stop-Service -Name dmwappushservice -Force
-      false: Set-Service -Name DiagTrack -StartupType Automatic; Start-Service -Name DiagTrack; Set-Service -Name dmwappushservice -StartupType Automatic; Start-Service -Name dmwappushservice
-      enabled: false
-    - name: Hide Taskbar Weather
-      purpose: Removes the weather icon from the taskbar.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 2 -Type DWORD -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 0 -Type DWORD -Force
-      enabled: false
-    - name: Hide Taskbar Search
-      purpose: Hides the search icon and search box from the taskbar.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 1 -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 0 -Type DWORD -Force
-      enabled: false
-    - name: Disable Snap Assist
-      purpose: Disables the feature that helps you arrange app windows on the screen.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 0 -Type DWORD -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 1 -Type DWORD -Force
-      enabled: false
-    - name: Disable Modern Standby
-      purpose: Forces the system to use traditional sleep mode instead of Modern Standby.
-      on: Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Value 0 -Type DWORD -Force
-      off: Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Force
       enabled: false
   - category: Security
     items:
@@ -102,6 +50,22 @@ tweaks:
         -Name 'EnableLUA' -Value 0 -Type DWORD -Force
       false: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System'
         -Name 'EnableLUA' -Value 1 -Type DWORD -Force
+      enabled: false
+    - name: Disable SmartScreen
+      purpose: Disables the Windows security feature that blocks unrecognized apps.
+      true: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System'
+        -Name 'EnableSmartScreen' -Value 0 -Type DWORD -Force
+      false: Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System'
+        -Name 'EnableSmartScreen' -Force
+      enabled: false
+    - name: Disable Telemetry Services
+      purpose: Disables data collection services.
+      true: Set-Service -Name DiagTrack -StartupType Disabled; Stop-Service -Name
+        DiagTrack -Force; Set-Service -Name dmwappushservice -StartupType Disabled;
+        Stop-Service -Name dmwappushservice -Force
+      false: Set-Service -Name DiagTrack -StartupType Automatic; Start-Service -Name
+        DiagTrack; Set-Service -Name dmwappushservice -StartupType Automatic; Start-Service
+        -Name dmwappushservice
       enabled: false
   - category: Explorer & UI
     items:
@@ -121,6 +85,13 @@ tweaks:
       false: Remove-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
         -Recurse -Force
       enabled: false
+    - name: Hide Taskbar Weather
+      purpose: Removes the weather icon from the taskbar.
+      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
+        -Name 'TaskbarWeatherMode' -Value 2 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
+        -Name 'TaskbarWeatherMode' -Value 0 -Type DWORD -Force
+      enabled: false
   - category: Gaming
     items:
     - name: Enable Gaming Mode
@@ -132,9 +103,21 @@ tweaks:
         -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
         -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force
       enabled: false
-- feature: Cleaner
-  categories:
-  - category: Junk Files
+    - name: Disable Snap Assist
+      purpose: Disables the feature that helps you arrange app windows on the screen.
+      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
+        -Name 'SnapAssist' -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
+        -Name 'SnapAssist' -Value 1 -Type DWORD -Force
+      enabled: false
+    - name: Disable Modern Standby
+      purpose: Forces the system to use traditional sleep mode instead of Modern Standby.
+      true: Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power'
+        -Name 'PlatformAoAcOverride' -Value 0 -Type DWORD -Force
+      false: Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power'
+        -Name 'PlatformAoAcOverride' -Force
+      enabled: false
+  - category: Cleaner
     items:
     - name: Enable Auto Clean
       purpose: Automatically cleans user and system temp files, Windows prefetch,
