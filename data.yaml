@@ -100,7 +100,7 @@ tweaks:
     items:
     - name: Windows/Office Activation (legally problematic)
       purpose: Activate Windows and Office using massgrave.dev.
-      true: irm https://get.activated.win | iex
+           true: irm https://get.activated.win | iex
       false: slmgr.vbs /upk
       enabled: false
 
@@ -109,10 +109,17 @@ tweaks:
   - category: Junk Files
     items:
     - name: Enable Auto Clean
-      purpose: Automatically cleans user and system temp files, Windows prefetch, and Recycle Bin at user logon using a scheduled PowerShell task.
-      true: $Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument '-NoProfile -ExecutionPolicy Bypass -Command "& { Remove-Item \"$env:USERPROFILE\AppData\Local\Temp\*\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Temp\*\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Prefetch\*\" -Recurse -Force -ErrorAction SilentlyContinue; (New-Object -ComObject Shell.Application).Namespace(0xA).Items() | ForEach-Object { Remove-Item $_.Path -Recurse -Force -ErrorAction SilentlyContinue } }"'
-        $Trigger = New-ScheduledTaskTrigger -AtLogon
-        $Principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-        Register-ScheduledTask -TaskName "Winsane Auto Clean" -Action $Action -Trigger $Trigger -Principal $Principal
+      purpose: Automatically cleans user and system temp files, Windows prefetch,
+        and Recycle Bin at user logon using a scheduled PowerShell task.
+      true: $Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument
+        '-NoProfile -ExecutionPolicy Bypass -Command "& { Remove-Item \"$env:USERPROFILE\AppData\Local\Temp\*\"
+        -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Temp\*\"
+        -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Prefetch\*\"
+        -Recurse -Force -ErrorAction SilentlyContinue; (New-Object -ComObject Shell.Application).Namespace(0xA).Items()
+        | ForEach-Object { Remove-Item $_.Path -Recurse -Force -ErrorAction SilentlyContinue
+        } }"'; $Trigger = New-ScheduledTaskTrigger -AtLogon; $Principal = New-ScheduledTaskPrincipal
+        -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest;
+        Register-ScheduledTask -TaskName "Winsane Auto Clean" -Action $Action -Trigger
+        $Trigger -Principal $Principal
       false: Unregister-ScheduledTask -TaskName "Winsane Auto Clean" -Confirm:$false
       enabled: false
