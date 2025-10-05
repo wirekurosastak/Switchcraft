@@ -110,12 +110,12 @@ tweaks:
       false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
         -Name 'TaskbarAl' -Value 1 -Type DWORD -Force
       enabled: false
-    - name: Hide Taskbar Weather
+    - name: Disable Taskbar Weather
       purpose: Removes the weather icon from the taskbar.
       true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 2 -Type DWORD -Force
       false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 0 -Type DWORD -Force
       enabled: false
-    - name: Hide Taskbar Search
+    - name: Disable Taskbar Search
       purpose: Hides the search icon and search box from the taskbar.
       true: Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Search' -Name 'SearchboxTaskbarMode' -Value 0 -Type DWORD -Force
       false: Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Search' -Name 'SearchboxTaskbarMode' -Value 2 -Type DWORD -Force
