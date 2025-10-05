@@ -103,8 +103,6 @@ tweaks:
       false: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System'
         -Name 'EnableLUA' -Value 1 -Type DWORD -Force
       enabled: false
-  - category: Privacy
-    items:
   - category: Explorer & UI
     items:
     - name: Align Taskbar to Left
@@ -123,8 +121,6 @@ tweaks:
       false: Remove-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
         -Recurse -Force
       enabled: false
-  - category: Network
-    items:
   - category: Gaming
     items:
     - name: Enable Gaming Mode
@@ -136,10 +132,6 @@ tweaks:
         -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
         -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force
       enabled: false
-  - category: Touch
-    items:
-  - category: Windows Update
-    items:
 - feature: Cleaner
   categories:
   - category: Junk Files
