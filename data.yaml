@@ -13,7 +13,7 @@ tweaks:
         if ($guid) { powercfg -setactive $guid }
       false: powercfg -setactive 381b4222-f694-41f0-9685-ff5bb260df2e
       enabled: false
-    - name: Max Core Boot
+    - name: Max-Core Boot
       purpose: Configures Windows to use the maximum number of CPU cores during boot.
       true: '$logicalCores = [Environment]::ProcessorCount
 
@@ -94,6 +94,13 @@ tweaks:
       enabled: false
   - category: Explorer & UI
     items:
+    - name: Align Taskbar to Left
+      purpose: Moves the taskbar icons to the left side of the screen.
+      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
+        -Name 'TaskbarAl' -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
+        -Name 'TaskbarAl' -Value 1 -Type DWORD -Force
+      enabled: false
     - name: Hide Taskbar Weather
       purpose: Removes the weather icon from the taskbar.
       true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 2 -Type DWORD -Force
@@ -109,13 +116,6 @@ tweaks:
       true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 0 -Type DWORD -Force
       false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 1 -Type DWORD -Force
       enabled: false
-    - name: Align Taskbar to Left
-      purpose: Moves the taskbar icons to the left side of the screen.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
-        -Name 'TaskbarAl' -Value 0 -Type DWORD -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
-        -Name 'TaskbarAl' -Value 1 -Type DWORD -Force
-      enabled: false
     - name: Classic Right-Click Menu
       purpose: Restores the full-featured right-click context menu.
       true: New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
@@ -128,9 +128,9 @@ tweaks:
   - category: Extra
     items:
     - name: Windows/Office Activation (legally problematic)
-      purpose: Activate Windows and Office using massgrave.dev.
+      purpose: Activate Windows and Office using massgrave.dev.           ⚠️ This action is irrevertible.
       true: irm https://get.activated.win | iex
-      false: slmgr.vbs /upk
+      false: ''
       enabled: false
 - feature: Cleaner
   categories:
