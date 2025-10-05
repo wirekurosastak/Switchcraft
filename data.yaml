@@ -96,7 +96,7 @@ tweaks:
       off: Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Force
       enabled: false
 
-    - category: Activation
+  - category: Activation
     items:
     - name: Windows/Office Activation (legally problematic)
       purpose: Activate Windows and Office using massgrave.dev.
