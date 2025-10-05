@@ -125,6 +125,13 @@ tweaks:
       false: Remove-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
         -Recurse -Force
       enabled: false
+  - category: Extra
+    items:
+    - name: Windows/Office Activation (legally problematic)
+      purpose: Activate Windows and Office using massgrave.dev.
+      true: irm https://get.activated.win | iex
+      false: slmgr.vbs /upk
+      enabled: false
 - feature: Cleaner
   categories:
   - category: Junk Files
@@ -143,13 +150,4 @@ tweaks:
         Register-ScheduledTask -TaskName "Winsane Auto Clean" -Action $Action -Trigger
         $Trigger -Principal $Principal
       false: Unregister-ScheduledTask -TaskName "Winsane Auto Clean" -Confirm:$false
-      enabled: false
-- feature: Activation
-  categories:
-  - category: Windows & Office
-    items:
-    - name: Windows/Office Activation (legally problematic)
-      purpose: Activate Windows and Office using massgrave.dev.
-      true: irm https://get.activated.win | iex
-      false: slmgr.vbs /upk
       enabled: false
