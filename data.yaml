@@ -2,9 +2,9 @@ theme:
   mode: dark
   accent_color: '#0581ff'
 tweaks:
-- feature: System Customization
+- feature: Tweaks
   categories:
-  - category: Performance & Core System
+  - category: Performance
     items:
     - name: Ultimate Performance
       purpose: Enables the Ultimate Performance power plan for maximum speed.
@@ -32,6 +32,15 @@ tweaks:
         Start-Process -FilePath "bcdedit.exe" -ArgumentList "/timeout 30" -Verb RunAs
 
         '
+      enabled: false
+    - name: Enable Gaming Mode
+      purpose: Prioritizes system resources for gaming applications.
+      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled'
+        -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
+        -Name 'GameDVR_Enabled' -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled'
+        -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
+        -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force
       enabled: false
     - name: Disable Superfetch
       purpose: Disables the service that preloads frequently used applications into
@@ -63,7 +72,7 @@ tweaks:
       true: Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Value 0 -Type DWORD -Force
       false: Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Force
       enabled: false
-  - category: Security, Privacy & Gaming
+  - category: Security, Privacy
     items:
     - name: Disable SmartScreen
       purpose: Disables the Windows security feature that blocks unrecognized apps.
@@ -83,21 +92,7 @@ tweaks:
       false: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System'
         -Name 'EnableLUA' -Value 1 -Type DWORD -Force
       enabled: false
-    - name: Windows/Office Activation (legally problematic)
-      purpose: Activate Windows and Office using massgrave.dev.
-      true: irm https://get.activated.win | iex
-      false: slmgr.vbs /upk
-      enabled: false
-    - name: Enable Gaming Mode
-      purpose: Prioritizes system resources for gaming applications.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled'
-        -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
-        -Name 'GameDVR_Enabled' -Value 1 -Type DWORD -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled'
-        -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
-        -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force
-      enabled: false
-  - category: Explorer & UI Tweaks
+  - category: Explorer & UI
     items:
     - name: Hide Taskbar Weather
       purpose: Removes the weather icon from the taskbar.
@@ -148,4 +143,13 @@ tweaks:
         Register-ScheduledTask -TaskName "Winsane Auto Clean" -Action $Action -Trigger
         $Trigger -Principal $Principal
       false: Unregister-ScheduledTask -TaskName "Winsane Auto Clean" -Confirm:$false
+      enabled: false
+- feature: Activation
+  categories:
+  - category: Windows & Office
+    items:
+    - name: Windows/Office Activation (legally problematic)
+      purpose: Activate Windows and Office using massgrave.dev.
+      true: irm https://get.activated.win | iex
+      false: slmgr.vbs /upk
       enabled: false
