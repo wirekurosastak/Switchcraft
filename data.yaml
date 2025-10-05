@@ -35,38 +35,36 @@ tweaks:
       enabled: false
     - name: Disable Power Throttling
       purpose: Prevents Windows from limiting background app performance to save battery.
-      true: |
-        Start-Process PowerShell -ArgumentList "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100" -Verb RunAs -Wait
-        Start-Process PowerShell -ArgumentList "powercfg /setdcvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100" -Verb RunAs -Wait
-        Start-Process PowerShell -ArgumentList "powercfg /setactive SCHEME_CURRENT" -Verb RunAs -Wait
-      false: |
-        Start-Process PowerShell -ArgumentList "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 50" -Verb RunAs -Wait
-        Start-Process PowerShell -ArgumentList "powercfg /setdcvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 50" -Verb RunAs -Wait
-        Start-Process PowerShell -ArgumentList "powercfg /setactive SCHEME_CURRENT" -Verb RunAs -Wait
+      true: powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100;
+        powercfg /setdcvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100;
+        powercfg /setactive SCHEME_CURRENT
+      false: powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 50;
+        powercfg /setdcvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 50;
+        powercfg /setactive SCHEME_CURRENT
       enabled: false
     - name: Disable Startup Delay
       purpose: Removes the artificial delay when launching startup applications after login.
-      true: |
-        New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize" -Name "StartupDelayInMSec" -Value 0 -Type DWORD -Force
-      false: |
-        Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize" -Name "StartupDelayInMSec" -Force -ErrorAction SilentlyContinue
+      true: New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize"
+        -Force | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize"
+        -Name "StartupDelayInMSec" -Value 0 -Type DWORD -Force
+      false: Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize"
+        -Name "StartupDelayInMSec" -Force
       enabled: false
     - name: Disable NTFS Last Access Timestamp
       purpose: Improves file system performance by disabling last access time updates.
-      true: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "NtfsDisableLastAccessUpdate" -Value 1 -Type DWORD -Force
-        Start-Process PowerShell -ArgumentList "fsutil behavior set disablelastaccess 1" -Verb RunAs -Wait
-      false: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "NtfsDisableLastAccessUpdate" -Value 0 -Type DWORD -Force
-        Start-Process PowerShell -ArgumentList "fsutil behavior set disablelastaccess 0" -Verb RunAs -Wait
+      true: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"
+        -Name "NtfsDisableLastAccessUpdate" -Value 1 -Type DWORD -Force; fsutil behavior
+        set disablelastaccess 1
+      false: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"
+        -Name "NtfsDisableLastAccessUpdate" -Value 0 -Type DWORD -Force; fsutil behavior
+        set disablelastaccess 0
       enabled: false
     - name: Enable Long Paths
       purpose: Allows Windows to use file paths longer than 260 characters.
-      true: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 0 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"
+        -Name "LongPathsEnabled" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"
+        -Name "LongPathsEnabled" -Value 0 -Type DWORD -Force
       enabled: false
     - name: Windows/Office Activation (legally problematic)
       purpose: Activate Windows and Office using massgrave.dev.
@@ -100,70 +98,68 @@ tweaks:
       enabled: false
     - name: Disable SMBv1 Protocol
       purpose: Disables outdated and insecure SMBv1 file sharing protocol.
-      true: |
-        Start-Process PowerShell -ArgumentList "Set-SmbServerConfiguration -EnableSMB1Protocol `$false -Force" -Verb RunAs -Wait
-        Start-Process PowerShell -ArgumentList "Disable-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -NoRestart" -Verb RunAs -Wait
-      false: |
-        Start-Process PowerShell -ArgumentList "Enable-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -NoRestart" -Verb RunAs -Wait
+      true: Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force; Disable-WindowsOptionalFeature
+        -Online -FeatureName 'SMB1Protocol' -NoRestart
+      false: Enable-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -NoRestart
       enabled: false
     - name: Disable SMBv2/v3 Protocols
       purpose: Disables SMBv2 and v3 protocols (not recommended for most users).
-      true: |
-        Start-Process PowerShell -ArgumentList "Set-SmbServerConfiguration -EnableSMB2Protocol `$false -Force" -Verb RunAs -Wait
-      false: |
-        Start-Process PowerShell -ArgumentList "Set-SmbServerConfiguration -EnableSMB2Protocol `$true -Force" -Verb RunAs -Wait
+      true: Set-SmbServerConfiguration -EnableSMB2Protocol $false -Force
+      false: Set-SmbServerConfiguration -EnableSMB2Protocol $true -Force
       enabled: false
     - name: Disable Remote Desktop
       purpose: Prevents remote access to your PC via Remote Desktop Protocol.
-      true: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 1 -Type DWORD -Force
-        Start-Process PowerShell -ArgumentList "Set-NetFirewallRule -DisplayGroup 'Remote Desktop' -Enabled False" -Verb RunAs -Wait
-      false: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0 -Type DWORD -Force
-        Start-Process PowerShell -ArgumentList "Set-NetFirewallRule -DisplayGroup 'Remote Desktop' -Enabled True" -Verb RunAs -Wait
+      true: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal
+        Server" -Name "fDenyTSConnections" -Value 1 -Type DWORD -Force; Set-NetFirewallRule
+        -DisplayGroup 'Remote Desktop' -Enabled False
+      false: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal
+        Server" -Name "fDenyTSConnections" -Value 0 -Type DWORD -Force; Set-NetFirewallRule
+        -DisplayGroup 'Remote Desktop' -Enabled True
       enabled: false
     - name: Disable Windows Defender SmartScreen
       purpose: Prevents SmartScreen from blocking unknown apps and files (security risk).
-      true: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "SmartScreenEnabled" -Value "Off" -Type String -Force
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "EnableSmartScreen" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" -Name "SmartScreenEnabled" -Value "RequireAdmin" -Type String -Force
-        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "EnableSmartScreen" -Force -ErrorAction SilentlyContinue
+      true: Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+        -Name "SmartScreenEnabled" -Value "Off" -Type String -Force; New-Item -Path
+        "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Force | Out-Null; Set-ItemProperty
+        -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "EnableSmartScreen"
+        -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+        -Name "SmartScreenEnabled" -Value "RequireAdmin" -Type String -Force; Remove-ItemProperty
+        -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "EnableSmartScreen"
+        -Force
       enabled: false
   - category: Privacy
     items:
     - name: Disable Telemetry & Feedback
       purpose: Stops Windows from sending diagnostic data and sets feedback to never.
-      true: |
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Value 0 -Type DWORD -Force
-        New-Item -Path "HKCU:\Software\Microsoft\Siuf\Rules" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Siuf\Rules" -Name "NumberOfSIUFInPeriod" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Value 3 -Type DWORD -Force
-        Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Siuf\Rules" -Name "NumberOfSIUFInPeriod" -Force -ErrorAction SilentlyContinue
+      true: New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+        -Name "AllowTelemetry" -Value 0 -Type DWORD -Force; New-Item -Path "HKCU:\Software\Microsoft\Siuf\Rules"
+        -Force | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Siuf\Rules"
+        -Name "NumberOfSIUFInPeriod" -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+        -Name "AllowTelemetry" -Value 3 -Type DWORD -Force; Remove-ItemProperty -Path
+        "HKCU:\Software\Microsoft\Siuf\Rules" -Name "NumberOfSIUFInPeriod" -Force
       enabled: false
     - name: Disable Advertising ID
       purpose: Stops personalized ads based on your usage and app activity.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo" -Name "Enabled" -Value 0 -Type DWORD -Force
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" -Name "DisabledByGroupPolicy" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo" -Name "Enabled" -Value 1 -Type DWORD -Force
-        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" -Name "DisabledByGroupPolicy" -Force -ErrorAction SilentlyContinue
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
+        -Name "Enabled" -Value 0 -Type DWORD -Force; New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo"
+        -Name "DisabledByGroupPolicy" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
+        -Name "Enabled" -Value 1 -Type DWORD -Force; Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo"
+        -Name "DisabledByGroupPolicy" -Force
       enabled: false
     - name: Disable Location Tracking
       purpose: Prevents apps and Windows from accessing your physical location.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location" -Name "Value" -Value "Deny" -Type String -Force
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors" -Name "DisableLocation" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location" -Name "Value" -Value "Allow" -Type String -Force
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors" -Name "DisableLocation" -Value 0 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+        -Name "Value" -Value "Deny" -Type String -Force; New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors"
+        -Name "DisableLocation" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+        -Name "Value" -Value "Allow" -Type String -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors"
+        -Name "DisableLocation" -Value 0 -Type DWORD -Force
       enabled: false
   - category: Explorer & UI
     items:
@@ -185,139 +181,144 @@ tweaks:
       enabled: false
     - name: Focus Mode
       purpose: Activates Windows Focus Assist to block notifications during focused work.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\FocusAssist" -Name "Mode" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\FocusAssist" -Name "Mode" -Value 0 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\FocusAssist"
+        -Name "Mode" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\FocusAssist"
+        -Name "Mode" -Value 0 -Type DWORD -Force
       enabled: false
     - name: Remove Menu Delay
       purpose: Makes right-click and hover menus appear instantly without delay.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "MenuShowDelay" -Value "0" -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "MenuShowDelay" -Value "400" -Force
+      true: Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "MenuShowDelay"
+        -Value "0" -Force
+      false: Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "MenuShowDelay"
+        -Value "400" -Force
       enabled: false
     - name: Disable Rounded Corners
       purpose: Removes rounded corners from windows for a sharper, classic look.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\DWM" -Name "RoundCorners" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\DWM" -Name "RoundCorners" -Value 1 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\DWM" -Name "RoundCorners"
+        -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\DWM" -Name "RoundCorners"
+        -Value 1 -Type DWORD -Force
       enabled: false
     - name: Disable Widgets
       purpose: Removes Widgets button from taskbar and disables the service.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 1 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "TaskbarDa" -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "TaskbarDa" -Value 1 -Type DWORD -Force
       enabled: false
     - name: Disable Notifications
       purpose: Turns off all system and app notifications for uninterrupted work.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -Value 0 -Type DWORD -Force
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "NoToastApplicationNotification" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "ToastEnabled" -Value 1 -Type DWORD -Force
-        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications" -Name "NoToastApplicationNotification" -Force -ErrorAction SilentlyContinue
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications"
+        -Name "ToastEnabled" -Value 0 -Type DWORD -Force; New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications"
+        -Name "NoToastApplicationNotification" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications"
+        -Name "ToastEnabled" -Value 1 -Type DWORD -Force; Remove-ItemProperty -Path
+        "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications"
+        -Name "NoToastApplicationNotification" -Force
       enabled: false
     - name: Disable Copilot
       purpose: Completely disables Windows Copilot AI assistant and removes the taskbar icon.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowCopilotButton" -Value 0 -Type DWORD -Force
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot" -Name "TurnOffWindowsCopilot" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowCopilotButton" -Value 1 -Type DWORD -Force
-        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot" -Name "TurnOffWindowsCopilot" -Force -ErrorAction SilentlyContinue
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "ShowCopilotButton" -Value 0 -Type DWORD -Force; New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot"
+        -Name "TurnOffWindowsCopilot" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "ShowCopilotButton" -Value 1 -Type DWORD -Force; Remove-ItemProperty
+        -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot" -Name "TurnOffWindowsCopilot"
+        -Force
       enabled: false
     - name: Disable Microsoft Teams Chat
       purpose: Completely disables Microsoft Teams integration and removes the taskbar icon.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Value 0 -Type DWORD -Force
-        Get-AppxPackage -Name "MicrosoftTeams" -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Value 1 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "TaskbarMn" -Value 0 -Type DWORD -Force; Get-AppxPackage -Name "MicrosoftTeams"
+        | Remove-AppxPackage
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "TaskbarMn" -Value 1 -Type DWORD -Force
       enabled: false
     - name: Disable Snap Assist
       purpose: Turns off window snapping suggestions when dragging windows.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "SnapAssist" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "SnapAssist" -Value 1 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "SnapAssist" -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        -Name "SnapAssist" -Value 1 -Type DWORD -Force
       enabled: false
     - name: Disable Start Menu Ads
       purpose: Removes recommended content and ads from the Start Menu.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338387Enabled" -Value 0 -Type DWORD -Force
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353694Enabled" -Value 0 -Type DWORD -Force
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353696Enabled" -Value 0 -Type DWORD -Force
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338387Enabled" -Value 1 -Type DWORD -Force
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353694Enabled" -Value 1 -Type DWORD -Force
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353696Enabled" -Value 1 -Type DWORD -Force
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Value 1 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SubscribedContent-338387Enabled" -Value 0 -Type DWORD -Force; Set-ItemProperty
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SubscribedContent-353694Enabled" -Value 0 -Type DWORD -Force; Set-ItemProperty
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SubscribedContent-353696Enabled" -Value 0 -Type DWORD -Force; Set-ItemProperty
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SystemPaneSuggestionsEnabled" -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SubscribedContent-338387Enabled" -Value 1 -Type DWORD -Force; Set-ItemProperty
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SubscribedContent-353694Enabled" -Value 1 -Type DWORD -Force; Set-ItemProperty
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SubscribedContent-353696Enabled" -Value 1 -Type DWORD -Force; Set-ItemProperty
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        -Name "SystemPaneSuggestionsEnabled" -Value 1 -Type DWORD -Force
       enabled: false
     - name: Disable News and Interests
       purpose: Turns off the news and weather widget in the taskbar.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds" -Name "ShellFeedsTaskbarViewMode" -Value 2 -Type DWORD -Force
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" -Name "EnableFeeds" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds" -Name "ShellFeedsTaskbarViewMode" -Value 0 -Type DWORD -Force
-        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" -Name "EnableFeeds" -Force -ErrorAction SilentlyContinue
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds"
+        -Name "ShellFeedsTaskbarViewMode" -Value 2 -Type DWORD -Force; New-Item -Path
+        "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" -Force | Out-Null;
+        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds"
+        -Name "EnableFeeds" -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds"
+        -Name "ShellFeedsTaskbarViewMode" -Value 0 -Type DWORD -Force; Remove-ItemProperty
+        -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds" -Name "EnableFeeds"
+        -Force
       enabled: false
     - name: Add "Open with CMD" to Right-Click
       purpose: Adds "Open command window here" to folder background right-click menu.
-      true: |
-        $cmdKey1 = "HKCR:\Directory\shell\OpenCmdHere"
-        $cmdKey2 = "HKCR:\Directory\Background\shell\OpenCmdHere"
-        $cmdKey3 = "HKCR:\Drive\shell\OpenCmdHere"
-        
-        New-Item -Path $cmdKey1 -Value "Open Command Prompt Here" -Force | Out-Null
-        New-Item -Path "$cmdKey1\command" -Value 'cmd.exe /s /k pushd "%V"' -Force | Out-Null
-        
-        New-Item -Path $cmdKey2 -Value "Open Command Prompt Here" -Force | Out-Null
-        New-Item -Path "$cmdKey2\command" -Value 'cmd.exe /s /k pushd "%V"' -Force | Out-Null
-        
-        New-Item -Path $cmdKey3 -Value "Open Command Prompt Here" -Force | Out-Null
-        New-Item -Path "$cmdKey3\command" -Value 'cmd.exe /s /k pushd "%V"' -Force | Out-Null
-      false: |
-        Remove-Item -Path "HKCR:\Directory\shell\OpenCmdHere" -Recurse -Force -ErrorAction SilentlyContinue
-        Remove-Item -Path "HKCR:\Directory\Background\shell\OpenCmdHere" -Recurse -Force -ErrorAction SilentlyContinue
-        Remove-Item -Path "HKCR:\Drive\shell\OpenCmdHere" -Recurse -Force -ErrorAction SilentlyContinue
+      true: '$cmdKey1 = "HKCR:\Directory\shell\OpenCmdHere"; $cmdKey2 = "HKCR:\Directory\Background\shell\OpenCmdHere";
+        $cmdKey3 = "HKCR:\Drive\shell\OpenCmdHere"; New-Item -Path $cmdKey1 -Value
+        "Open Command Prompt Here" -Force | Out-Null; New-Item -Path "$cmdKey1\command"
+        -Value ''cmd.exe /s /k pushd "%V"'' -Force | Out-Null; New-Item -Path $cmdKey2
+        -Value "Open Command Prompt Here" -Force | Out-Null; New-Item -Path "$cmdKey2\command"
+        -Value ''cmd.exe /s /k pushd "%V"'' -Force | Out-Null; New-Item -Path $cmdKey3
+        -Value "Open Command Prompt Here" -Force | Out-Null; New-Item -Path "$cmdKey3\command"
+        -Value ''cmd.exe /s /k pushd "%V"'' -Force | Out-Null'
+      false: 'Remove-Item -Path "HKCR:\Directory\shell\OpenCmdHere" -Recurse -Force;
+        Remove-Item -Path "HKCR:\Directory\Background\shell\OpenCmdHere" -Recurse -Force;
+        Remove-Item -Path "HKCR:\Drive\shell\OpenCmdHere" -Recurse -Force'
       enabled: false
   - category: Network
     items:
     - name: Disable Network Throttling
       purpose: Removes bandwidth limits on multimedia and network performance.
-      true: |
-        New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" -Name "NetworkThrottlingIndex" -Value 0xFFFFFFFF -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" -Name "NetworkThrottlingIndex" -Value 10 -Type DWORD -Force
+      true: New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows
+        NT\CurrentVersion\Multimedia\SystemProfile" -Name "NetworkThrottlingIndex"
+        -Value 0xFFFFFFFF -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
+        -Name "NetworkThrottlingIndex" -Value 10 -Type DWORD -Force
       enabled: false
     - name: Gaming Network Priority
       purpose: Prioritizes network traffic for games and multimedia applications.
-      true: |
-        New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" -Name "Priority" -Value 6 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" -Name "Priority" -Value 2 -Type DWORD -Force
+      true: New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows
+        NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" -Name "Priority" -Value
+        6 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games"
+        -Name "Priority" -Value 2 -Type DWORD -Force
       enabled: false
     - name: Enable DNS Over HTTPS
       purpose: Encrypts DNS queries for enhanced privacy and security.
-      true: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" -Name "EnableAutoDoh" -Value 2 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" -Name "EnableAutoDoh" -Value 0 -Type DWORD -Force
+      true: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters"
+        -Name "EnableAutoDoh" -Value 2 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters"
+        -Name "EnableAutoDoh" -Value 0 -Type DWORD -Force
       enabled: false
     - name: Flush DNS Cache
       purpose: Clears outdated DNS entries to improve domain resolution speed.
-      true: |
-        Clear-DnsClientCache
+      true: Clear-DnsClientCache
       false: ""
       enabled: false
   - category: Gaming
@@ -333,73 +334,66 @@ tweaks:
       enabled: false
     - name: Disable Xbox Live Services
       purpose: Turns off Xbox Live integration and related services.
-      true: |
-        $services = @("XboxGipSvc", "XboxNetApiSvc", "XboxLiveAuthManager")
-        foreach ($service in $services) {
-          Set-Service -Name $service -StartupType Disabled -ErrorAction SilentlyContinue
-          Stop-Service -Name $service -Force -ErrorAction SilentlyContinue
-        }
-        Get-AppxPackage -Name "Microsoft.XboxApp" -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue
-      false: |
-        $services = @("XboxGipSvc", "XboxNetApiSvc", "XboxLiveAuthManager")
-        foreach ($service in $services) {
-          Set-Service -Name $service -StartupType Manual -ErrorAction SilentlyContinue
-          Start-Service -Name $service -ErrorAction SilentlyContinue
-        }
+      true: '$services = @("XboxGipSvc", "XboxNetApiSvc", "XboxLiveAuthManager"); foreach
+        ($service in $services) { Set-Service -Name $service -StartupType Disabled;
+        Stop-Service -Name $service -Force }; Get-AppxPackage -Name "Microsoft.XboxApp"
+        | Remove-AppxPackage'
+      false: '$services = @("XboxGipSvc", "XboxNetApiSvc", "XboxLiveAuthManager"); foreach
+        ($service in $services) { Set-Service -Name $service -StartupType Manual; Start-Service
+        -Name $service }'
       enabled: false
     - name: Disable Game Bar
       purpose: Completely disables Xbox Game Bar and its features.
-      true: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameBar" -Name "AllowAutoGameMode" -Value 0 -Type DWORD -Force
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Name "AllowGameDVR" -Value 0 -Type DWORD -Force
-        Get-AppxPackage -Name "Microsoft.XboxGamingOverlay" -ErrorAction SilentlyContinue | Remove-AppxPackage -ErrorAction SilentlyContinue
-      false: |
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameBar" -Name "AllowAutoGameMode" -Value 1 -Type DWORD -Force
-        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Name "AllowGameDVR" -Force -ErrorAction SilentlyContinue
+      true: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameBar"
+        -Name "AllowAutoGameMode" -Value 0 -Type DWORD -Force; New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR"
+        -Name "AllowGameDVR" -Value 0 -Type DWORD -Force; Get-AppxPackage -Name "Microsoft.XboxGamingOverlay"
+        | Remove-AppxPackage
+      false: Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameBar"
+        -Name "AllowAutoGameMode" -Value 1 -Type DWORD -Force; Remove-ItemProperty
+        -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Name "AllowGameDVR"
+        -Force
       enabled: false
   - category: Windows Update
     items:
     - name: Exclude Drivers from Windows Updates
       purpose: Prevents Windows Update from automatically updating hardware drivers.
-      true: |
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name "ExcludeWUDriversInQualityUpdate" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name "ExcludeWUDriversInQualityUpdate" -Value 0 -Type DWORD -Force
+      true: New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"
+        -Name "ExcludeWUDriversInQualityUpdate" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"
+        -Name "ExcludeWUDriversInQualityUpdate" -Value 0 -Type DWORD -Force
       enabled: false
     - name: Disable Automatic Updates
       purpose: Prevents Windows from downloading and installing updates automatically.
-      true: |
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate" -Value 1 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate" -Value 0 -Type DWORD -Force
+      true: New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
+        -Force | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
+        -Name "NoAutoUpdate" -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
+        -Name "NoAutoUpdate" -Value 0 -Type DWORD -Force
       enabled: false
     - name: Disable Update Restart Notifications
       purpose: Stops Windows from nagging you to restart after updates.
-      true: |
-        New-Item -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "RestartNotificationsAllowed2" -Value 0 -Type DWORD -Force
-      false: |
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "RestartNotificationsAllowed2" -Value 1 -Type DWORD -Force
+      true: New-Item -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Force
+        | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
+        -Name "RestartNotificationsAllowed2" -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
+        -Name "RestartNotificationsAllowed2" -Value 1 -Type DWORD -Force
       enabled: false
     - name: Disable Microsoft Store Updates
       purpose: Prevents automatic updates from Microsoft Store.
-      true: |
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Force -ErrorAction SilentlyContinue
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "AutoDownload" -Value 2 -Type DWORD -Force
-      false: |
-        Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "AutoDownload" -Force -ErrorAction SilentlyContinue
+      true: New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Force
+        | Out-Null; Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore"
+        -Name "AutoDownload" -Value 2 -Type DWORD -Force
+      false: Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore"
+        -Name "AutoDownload" -Force
       enabled: false
     - name: Disable Windows Insider Service
       purpose: Stops Windows Insider Program services and updates.
-      true: |
-        Set-Service -Name "WindowsInsiderService" -StartupType Disabled -ErrorAction SilentlyContinue
-        Stop-Service -Name "WindowsInsiderService" -Force -ErrorAction SilentlyContinue
-      false: |
-        Set-Service -Name "WindowsInsiderService" -StartupType Manual -ErrorAction SilentlyContinue
-        Start-Service -Name "WindowsInsiderService" -ErrorAction SilentlyContinue
+      true: Set-Service -Name "WindowsInsiderService" -StartupType Disabled; Stop-Service
+        -Name "WindowsInsiderService" -Force
+      false: Set-Service -Name "WindowsInsiderService" -StartupType Manual; Start-Service
+        -Name "WindowsInsiderService"
       enabled: false
 - feature: Cleaner
   categories:
