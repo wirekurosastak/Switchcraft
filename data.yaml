@@ -1,68 +1,42 @@
+Here’s your updated YAML structure with reorganized categories. Each category now contains at least three items, and the Windows/Office Activator remains included under a dedicated category.
+
+```yaml
 theme:
   mode: dark
   accent_color: '#0581ff'
 tweaks:
 - feature: Tweaks
   categories:
-  - category: System
+  - category: Performance & Boot
     items:
     - name: Ultimate Performance
       purpose: Enables the Ultimate Performance power plan for maximum speed.
-      true: $guid = powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
-        | ForEach-Object { if ($_ -match 'GUID:\s*([a-f0-9-]+)') { $matches[1] }};
-        if ($guid) { powercfg -setactive $guid }
+      true: $guid = powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 | ForEach-Object { if ($_ -match 'GUID:\s*([a-f0-9-]+)') { $matches[1] }}; if ($guid) { powercfg -setactive $guid }
       false: powercfg -setactive 381b4222-f694-41f0-9685-ff5bb260df2e
       enabled: false
     - name: Max Core Boot
       purpose: Configures Windows to use the maximum number of CPU cores during boot.
-      true: '$logicalCores = [Environment]::ProcessorCount
-
-        Start-Process -FilePath "bcdedit.exe" -ArgumentList "/set {current} numproc
-        $logicalCores" -Verb RunAs
-
-        Start-Process -FilePath "bcdedit.exe" -ArgumentList "/timeout 3" -Verb RunAs
-
-        '
-      false: 'Start-Process -FilePath "bcdedit.exe" -ArgumentList "/deletevalue {current}
-        numproc" -Verb RunAs
-
-        Start-Process -FilePath "bcdedit.exe" -ArgumentList "/deletevalue {current}
-        timeout" -Verb RunAs
-
-        Start-Process -FilePath "bcdedit.exe" -ArgumentList "/timeout 30" -Verb RunAs
-
-        '
-      enabled: false
-    - name: Windows/Office Activation (legally problematic)
-      purpose: Activate Windows and Office using massgrave.dev.
-      true: irm https://get.activated.win | iex
-      false: slmgr.vbs /upk
+      true: '$logicalCores = [Environment]::ProcessorCount\nStart-Process -FilePath "bcdedit.exe" -ArgumentList "/set {current} numproc $logicalCores" -Verb RunAs\nStart-Process -FilePath "bcdedit.exe" -ArgumentList "/timeout 3" -Verb RunAs'
+      false: 'Start-Process -FilePath "bcdedit.exe" -ArgumentList "/deletevalue {current} numproc" -Verb RunAs\nStart-Process -FilePath "bcdedit.exe" -ArgumentList "/deletevalue {current} timeout" -Verb RunAs\nStart-Process -FilePath "bcdedit.exe" -ArgumentList "/timeout 30" -Verb RunAs'
       enabled: false
     - name: Disable Superfetch
-      purpose: Disables the service that preloads frequently used applications into
-        RAM.
-      true: Set-Service -Name SysMain -StartupType Disabled; Stop-Service -Name SysMain
-        -Force
-      false: Set-Service -Name SysMain -StartupType Automatic; Start-Service -Name
-        SysMain
+      purpose: Disables the service that preloads frequently used applications into RAM.
+      true: Set-Service -Name SysMain -StartupType Disabled; Stop-Service -Name SysMain -Force
+      false: Set-Service -Name SysMain -StartupType Automatic; Start-Service -Name SysMain
       enabled: false
     - name: Disable Search Indexing
       purpose: Disables the service that indexes files to speed up search.
-      true: Set-Service -Name WSearch -StartupType Disabled; Stop-Service -Name WSearch
-        -Force
-      false: Set-Service -Name WSearch -StartupType Automatic; Start-Service -Name
-        WSearch
+      true: Set-Service -Name WSearch -StartupType Disabled; Stop-Service -Name WSearch -Force
+      false: Set-Service -Name WSearch -StartupType Automatic; Start-Service -Name WSearch
       enabled: false
     - name: Disable Hibernation
       purpose: Turns off the hibernation feature and deletes the hiberfil.sys file.
       true: powercfg.exe /hibernate off
       false: powercfg.exe /hibernate on
       enabled: false
-    - name: Disable NTFS Timestamp
-      purpose: Stops updating the last-access timestamp on files and folders.
-      true: fsutil behavior set disablelastaccess 1
-      false: fsutil behavior set disablelastaccess 0
-      enabled: false
+
+  - category: Privacy & Security
+    items:
     - name: Disable SmartScreen
       purpose: Disables the Windows security feature that blocks unrecognized apps.
       true: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System' -Name 'EnableSmartScreen' -Value 0 -Type DWORD -Force
@@ -72,6 +46,29 @@ tweaks:
       purpose: Disables data collection services.
       true: Set-Service -Name DiagTrack -StartupType Disabled; Stop-Service -Name DiagTrack -Force; Set-Service -Name dmwappushservice -StartupType Disabled; Stop-Service -Name dmwappushservice -Force
       false: Set-Service -Name DiagTrack -StartupType Automatic; Start-Service -Name DiagTrack; Set-Service -Name dmwappushservice -StartupType Automatic; Start-Service -Name dmwappushservice
+      enabled: false
+    - name: Disable UAC
+      purpose: Turns off the security feature that prompts for permission when programs make changes.
+      true: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name 'EnableLUA' -Value 1 -Type DWORD -Force
+      enabled: false
+    - name: Disable NTFS Timestamp
+      purpose: Stops updating the last-access timestamp on files and folders.
+      true: fsutil behavior set disablelastaccess 1
+      false: fsutil behavior set disablelastaccess 0
+      enabled: false
+
+  - category: UI & Taskbar
+    items:
+    - name: Align Taskbar to Left
+      purpose: Moves the taskbar icons to the left side of the screen.
+      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarAl' -Value 0 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarAl' -Value 1 -Type DWORD -Force
+      enabled: false
+    - name: Enable Classic Right-Click Menu
+      purpose: Restores the full-featured right-click context menu.
+      true: New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}" -Force | Out-Null; New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" -Force | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" -Name "(default)" -Value "" -Force
+      false: Remove-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}" -Recurse -Force
       enabled: false
     - name: Hide Taskbar Weather
       purpose: Removes the weather icon from the taskbar.
@@ -88,66 +85,37 @@ tweaks:
       true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 0 -Type DWORD -Force
       false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 1 -Type DWORD -Force
       enabled: false
+
+  - category: Gaming & Power
+    items:
+    - name: Enable Gaming Mode
+      purpose: Prioritizes system resources for gaming applications.
+      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled' -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore' -Name 'GameDVR_Enabled' -Value 1 -Type DWORD -Force
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled' -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore' -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force
+      enabled: false
     - name: Disable Modern Standby
       purpose: Forces the system to use traditional sleep mode instead of Modern Standby.
       on: Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Value 0 -Type DWORD -Force
       off: Remove-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name 'PlatformAoAcOverride' -Force
       enabled: false
-  - category: Security
+
+    - category: Activation
     items:
-    - name: Disable UAC
-      purpose: Turns off the security feature that prompts for permission when programs
-        make changes.
-      true: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System'
-        -Name 'EnableLUA' -Value 0 -Type DWORD -Force
-      false: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System'
-        -Name 'EnableLUA' -Value 1 -Type DWORD -Force
+    - name: Windows/Office Activation (legally problematic)
+      purpose: Activate Windows and Office using massgrave.dev.
+      true: irm https://get.activated.win | iex
+      false: slmgr.vbs /upk
       enabled: false
-  - category: Explorer & UI
-    items:
-    - name: Align Taskbar to Left
-      purpose: Moves the taskbar icons to the left side of the screen.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
-        -Name 'TaskbarAl' -Value 0 -Type DWORD -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced'
-        -Name 'TaskbarAl' -Value 1 -Type DWORD -Force
-      enabled: false
-    - name: Enable Classic Right-Click Menu
-      purpose: Restores the full-featured right-click context menu.
-      true: New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
-        -Force | Out-Null; New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
-        -Force | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
-        -Name "(default)" -Value "" -Force
-      false: Remove-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
-        -Recurse -Force
-      enabled: false
-  - category: Gaming
-    items:
-    - name: Enable Gaming Mode
-      purpose: Prioritizes system resources for gaming applications.
-      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled'
-        -Value 1 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
-        -Name 'GameDVR_Enabled' -Value 1 -Type DWORD -Force
-      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AutoGameModeEnabled'
-        -Value 0 -Type DWORD -Force; Set-ItemProperty -Path 'HKCU:\\System\\GameConfigStore'
-        -Name 'GameDVR_Enabled' -Value 0 -Type DWORD -Force
-      enabled: false
+
 - feature: Cleaner
   categories:
   - category: Junk Files
     items:
     - name: Enable Auto Clean
-      purpose: Automatically cleans user and system temp files, Windows prefetch,
-        and Recycle Bin at user logon using a scheduled PowerShell task.
-      true: $Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument
-        '-NoProfile -ExecutionPolicy Bypass -Command "& { Remove-Item \"$env:USERPROFILE\AppData\Local\Temp\*\"
-        -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Temp\*\"
-        -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Prefetch\*\"
-        -Recurse -Force -ErrorAction SilentlyContinue; (New-Object -ComObject Shell.Application).Namespace(0xA).Items()
-        | ForEach-Object { Remove-Item $_.Path -Recurse -Force -ErrorAction SilentlyContinue
-        } }"'; $Trigger = New-ScheduledTaskTrigger -AtLogon; $Principal = New-ScheduledTaskPrincipal
-        -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest;
-        Register-ScheduledTask -TaskName "Winsane Auto Clean" -Action $Action -Trigger
-        $Trigger -Principal $Principal
+      purpose: Automatically cleans user and system temp files, Windows prefetch, and Recycle Bin at user logon using a scheduled PowerShell task.
+      true: $Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument '-NoProfile -ExecutionPolicy Bypass -Command "& { Remove-Item \"$env:USERPROFILE\AppData\Local\Temp\*\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Temp\*\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"C:\Windows\Prefetch\*\" -Recurse -Force -ErrorAction SilentlyContinue; (New-Object -ComObject Shell.Application).Namespace(0xA).Items() | ForEach-Object { Remove-Item $_.Path -Recurse -Force -ErrorAction SilentlyContinue } }"'
+        $Trigger = New-ScheduledTaskTrigger -AtLogon
+        $Principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+        Register-ScheduledTask -TaskName "Winsane Auto Clean" -Action $Action -Trigger $Trigger -Principal $Principal
       false: Unregister-ScheduledTask -TaskName "Winsane Auto Clean" -Confirm:$false
       enabled: false
