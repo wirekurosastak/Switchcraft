@@ -66,14 +66,25 @@ tweaks:
     - name: Disable SmartScreen
       purpose: Disables the Windows security feature that blocks unrecognized apps.
       true: Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System' -Name 'EnableSmartScreen' -Value 0 -Type DWORD -Force
-@@ -73,6 +47,29 @@ tweaks:
+      false: Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System' -Name 'EnableSmartScreen' -Force
+      enabled: false
+    - name: Disable Telemetry Services
+      purpose: Disables data collection services.
       true: Set-Service -Name DiagTrack -StartupType Disabled; Stop-Service -Name DiagTrack -Force; Set-Service -Name dmwappushservice -StartupType Disabled; Stop-Service -Name dmwappushservice -Force
       false: Set-Service -Name DiagTrack -StartupType Automatic; Start-Service -Name DiagTrack; Set-Service -Name dmwappushservice -StartupType Automatic; Start-Service -Name dmwappushservice
       enabled: false
     - name: Hide Taskbar Weather
       purpose: Removes the weather icon from the taskbar.
       true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 2 -Type DWORD -Force
-@@ -88,66 +85,37 @@ tweaks:
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'TaskbarWeatherMode' -Value 0 -Type DWORD -Force
+      enabled: false
+    - name: Hide Taskbar Search
+      purpose: Hides the search icon and search box from the taskbar.
+      true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 1 -Force
+      false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search' -Name 'SearchboxTaskbarMode' -Value 0 -Type DWORD -Force
+      enabled: false
+    - name: Disable Snap Assist
+      purpose: Disables the feature that helps you arrange app windows on the screen.
       true: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 0 -Type DWORD -Force
       false: Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name 'SnapAssist' -Value 1 -Type DWORD -Force
       enabled: false
